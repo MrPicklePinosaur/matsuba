@@ -1,5 +1,11 @@
 
-# matsuba
+# 松葉matsuba
 
-lightweight japanese ime for x.
+**matsuba** - a lightweight japanese ime for x written in rust.
+
+## RUNNING FOR DEVELOPMENT
+
+```
+ $ cargo run
+```
 

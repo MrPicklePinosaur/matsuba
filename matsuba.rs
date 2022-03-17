@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let win = conn.generate_id()?;
     let values_list = CreateWindowAux::default()
         .background_pixel(screen.white_pixel)
-        .event_mask(EventMask::EXPOSURE);
+        .event_mask(EventMask::EXPOSURE|EventMask::KEY_PRESS);
     conn.create_window(
         COPY_DEPTH_FROM_PARENT,
         win,
@@ -47,15 +47,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         let event = conn.wait_for_event()?;
-        if let Event::Expose(_) = event {
-            conn.poly_line(CoordMode::PREVIOUS, win, foreground, &points); 
-            conn.flush()?;
+        match event {
+            Event::Expose(event) => {
+                conn.poly_line(CoordMode::PREVIOUS, win, foreground, &points); 
+                conn.flush()?;
+            }
+            Event::KeyPress(event) => {
+                println!("keypress {}", event.detail);
+            }
+            _ => {
+
+            }
         }
     }
 
-    std::thread::sleep(std::time::Duration::from_secs(5));
-
     drop(conn);
     Ok(())
-
 }
+
