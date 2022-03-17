@@ -1,0 +1,11 @@
+[package]
+name = "matsuba"
+version = "0.1.0"
+edition = "2018"
+
+[[bin]]
+name = "matsuba"
+path = "matsuba.rs"
+
+[dependencies]
+x11rb = "0.9.0"
