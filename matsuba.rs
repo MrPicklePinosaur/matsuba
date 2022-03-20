@@ -4,6 +4,8 @@ use x11rb::protocol::xproto::*;
 use x11rb::protocol::Event;
 use x11rb::COPY_DEPTH_FROM_PARENT;
 
+mod dfa;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // xcb init
