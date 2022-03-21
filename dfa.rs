@@ -22,7 +22,8 @@ pub struct State<'a> {
 
 #[derive(Debug)]
 pub struct Converter<'a> {
-    pub dfa: Box<State<'a>>
+    pub start_state: &'a State<'a>,
+    pub cur_state: &'a State<'a>,
 }
 
 impl State<'_> {
@@ -35,23 +36,29 @@ impl State<'_> {
     }
 }
 
-impl Converter<'_> {
+impl<'a> Converter<'a> {
 
-    pub fn new() -> Self {
+    pub fn new(start_state: &State) -> Self {
         let converter = Converter{
-            dfa: Box::new(State::new()),
+            start_state: start_state,
+            cur_state: start_state,
         };
-        converter.build_dfa()
+        converter.build_dfa();
+        converter
     }
 
-    fn build_dfa(mut self) -> Self {
+    fn consume_char(mut self, ch: char) {
+
+    }
+
+    fn build_dfa(&mut self) {
         
         for conv in CONVERSION_TABLE {
-            let mut cur_state: &mut Box<State> = &mut self.dfa;
+            let mut cur_state: &mut State = &mut self.start_state;
             for (i, ch) in conv.0.chars().enumerate() {
 
                 // create state of does not exist
-                if (!cur_state.transitions.contains_key(&ch)) {
+                if !cur_state.transitions.contains_key(&ch) {
                     let new_state = State::new();
                     cur_state.transitions.insert(ch, Box::new(new_state));
                 }
@@ -60,12 +67,11 @@ impl Converter<'_> {
                 cur_state = cur_state.transitions.get_mut(&ch).unwrap();
 
                 // mark as accepting if last char
-                if (i == conv.0.len()-1) {
+                if i == conv.0.len()-1 {
                     cur_state.accepting = Some(conv.1);
                 } 
             }
         }
-        self
     }
 
 }
