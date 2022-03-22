@@ -1,18 +1,7 @@
 
 use std::collections::HashMap;
 
-static CONVERSION_TABLE: &'static [(&str, &str)] = &[
-    ("a",  "あ"),
-    ("i",  "い"),
-    ("u",  "う"),
-    ("e",  "え"),
-    ("o",  "お"),
-    ("ka", "か"),
-    ("ki", "き"),
-    ("ku", "く"),
-    ("ke", "け"),
-    ("ko", "こ"),
-];
+use super::conversion::{CONVERSION_TABLE};
 
 #[derive(Debug)]
 pub struct State {
@@ -24,6 +13,7 @@ pub struct State {
 pub struct Converter<'a> {
     pub start_state: &'a State,
     pub cur_state: &'a State,
+    pub output: String,
 }
 
 impl State {
@@ -39,25 +29,37 @@ impl State {
 impl<'a> Converter<'a> {
 
     pub fn new(start_state: &'a State) -> Converter<'a> {
-        let converter = Converter{
+        Converter{
             start_state: start_state,
             cur_state: start_state,
+            output: String::from(""),
+        }
+    }
+
+    pub fn consume_char(&mut self, ch: char) {
+        self.cur_state = match self.cur_state.transitions.get(&ch) {
+            Some(ref x) => x,
+            None => {
+                self.output.push(ch);
+                self.start_state
+            }
         };
-        converter
+        match self.cur_state.accepting {
+            Some(ref x) => {
+                self.output.push_str(x);
+                self.cur_state = self.start_state;
+            },
+            None => {}
+        }
     }
-
-    fn consume_char(mut self, ch: char) {
-
-    }
-
 }
 
-fn build_dfa() -> State {
+pub fn build_dfa() -> State {
     
     let mut new_dfa = State::new();
 
-    let mut cur_state: &mut State = &mut new_dfa;
     for conv in CONVERSION_TABLE {
+        let mut cur_state: &mut State = &mut new_dfa;
         for (i, ch) in conv.0.chars().enumerate() {
 
             // create state of does not exist
@@ -75,7 +77,6 @@ fn build_dfa() -> State {
             } 
         }
     }
-
     new_dfa
 }
 

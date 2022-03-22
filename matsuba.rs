@@ -4,10 +4,25 @@ use x11rb::protocol::xproto::*;
 use x11rb::protocol::Event;
 use x11rb::COPY_DEPTH_FROM_PARENT;
 
-mod dfa;
+mod converter;
+mod conversion;
+
+use converter::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
+    let dfa = build_dfa();
+    let mut c = Converter::new(&dfa);
+
+    for ch in "konnnichiha sekai, makkunn desu".chars() {
+        c.consume_char(ch);
+    }
+
+    println!("{}", c.output);
+
+    Ok(())
+
+/*
     // xcb init
     let (conn, screen_num) = x11rb::connect(None)?;
     let screen = &conn.setup().roots[screen_num];
@@ -65,5 +80,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     drop(conn);
     Ok(())
+*/
 }
 
