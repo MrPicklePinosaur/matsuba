@@ -15,18 +15,18 @@ static CONVERSION_TABLE: &'static [(&str, &str)] = &[
 ];
 
 #[derive(Debug)]
-pub struct State<'a> {
-    pub accepting: Option<&'a str>,
-    pub transitions: HashMap<char, Box<State<'a>>>
+pub struct State {
+    pub accepting: Option<String>,
+    pub transitions: HashMap<char, Box<State>>
 }
 
 #[derive(Debug)]
 pub struct Converter<'a> {
-    pub start_state: &'a State<'a>,
-    pub cur_state: &'a State<'a>,
+    pub start_state: &'a State,
+    pub cur_state: &'a State,
 }
 
-impl State<'_> {
+impl State {
 
     pub fn new() -> Self {
         State{
@@ -38,12 +38,11 @@ impl State<'_> {
 
 impl<'a> Converter<'a> {
 
-    pub fn new(start_state: &State) -> Self {
+    pub fn new(start_state: &'a State) -> Converter<'a> {
         let converter = Converter{
             start_state: start_state,
             cur_state: start_state,
         };
-        converter.build_dfa();
         converter
     }
 
@@ -51,28 +50,32 @@ impl<'a> Converter<'a> {
 
     }
 
-    fn build_dfa(&mut self) {
-        
-        for conv in CONVERSION_TABLE {
-            let mut cur_state: &mut State = &mut self.start_state;
-            for (i, ch) in conv.0.chars().enumerate() {
+}
 
-                // create state of does not exist
-                if !cur_state.transitions.contains_key(&ch) {
-                    let new_state = State::new();
-                    cur_state.transitions.insert(ch, Box::new(new_state));
-                }
+fn build_dfa() -> State {
+    
+    let mut new_dfa = State::new();
 
-                // transition
-                cur_state = cur_state.transitions.get_mut(&ch).unwrap();
+    let mut cur_state: &mut State = &mut new_dfa;
+    for conv in CONVERSION_TABLE {
+        for (i, ch) in conv.0.chars().enumerate() {
 
-                // mark as accepting if last char
-                if i == conv.0.len()-1 {
-                    cur_state.accepting = Some(conv.1);
-                } 
+            // create state of does not exist
+            if !cur_state.transitions.contains_key(&ch) {
+                let new_state = State::new();
+                cur_state.transitions.insert(ch, Box::new(new_state));
             }
+
+            // transition
+            cur_state = cur_state.transitions.get_mut(&ch).unwrap();
+
+            // mark as accepting if last char
+            if i == conv.0.len()-1 {
+                cur_state.accepting = Some(conv.1.to_string());
+            } 
         }
     }
 
+    new_dfa
 }
 
