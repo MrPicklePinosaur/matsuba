@@ -14,6 +14,7 @@ pub struct Converter<'a> {
     pub start_state: &'a State,
     pub cur_state: &'a State,
     pub output: String,
+    pub depth: u8, // depth of state in dfa (root is 0)
 }
 
 impl State {
@@ -33,21 +34,33 @@ impl<'a> Converter<'a> {
             start_state: start_state,
             cur_state: start_state,
             output: String::from(""),
+            depth: 0,
         }
     }
 
     pub fn consume_char(&mut self, ch: char) {
+
+        self.output.push(ch);
         self.cur_state = match self.cur_state.transitions.get(&ch) {
-            Some(ref x) => x,
+            Some(ref x) => {
+                self.depth += 1;
+                x
+            },
             None => {
-                self.output.push(ch);
+                self.depth = 0;
                 self.start_state
             }
         };
+
+        // check if we are in accepting state
         match self.cur_state.accepting {
             Some(ref x) => {
+                for i in 0..self.depth {
+                    self.output.pop();
+                }
                 self.output.push_str(x);
                 self.cur_state = self.start_state;
+                self.depth = 0;
             },
             None => {}
         }
