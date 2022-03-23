@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dfa = build_dfa();
     let mut c = Converter::new(&dfa);
 
-    for ch in "kopnnnichiha makkunn desu".chars() {
+    for ch in "kopnnnichiha makkkkkunn desu".chars() {
         c.input_char(ch);
     }
 

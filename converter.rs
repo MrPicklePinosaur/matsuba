@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 use std::collections::LinkedList;
 
-use super::conversion::{CONVERSION_TABLE};
+use super::conversion::*;
 
 #[derive(Debug)]
 pub struct State {
@@ -36,8 +36,8 @@ impl<'a> Converter<'a> {
         Converter{
             start_state: start_state,
             cur_state: start_state,
-            output: String::from(""),    // stack structure
-            input: LinkedList::new(), // queue structure
+            output: String::from(""),  // stack structure
+            input: LinkedList::new(),  // queue structure
         }
     }
 
@@ -57,7 +57,7 @@ impl<'a> Converter<'a> {
         }
 
         let ch = self.input.pop_back().unwrap();
-        self.output.push(ch);
+        let prev_ch = self.output.chars().last();
 
         // attempt to transition on input character
         match self.cur_state.transitions.get(&ch) {
@@ -74,6 +74,17 @@ impl<'a> Converter<'a> {
                 }
             },
         };
+
+        // small tsu expansion
+        if prev_ch.is_some() {
+            let prev_ch = prev_ch.unwrap().clone();
+            if ch == prev_ch {
+                self.output.pop();
+                self.output.push(HIRAGANA_SMALL_TSU.clone());
+            }
+        }
+
+        self.output.push(ch);
 
         // check if we are in accepting state
         match self.cur_state.accepting {

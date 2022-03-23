@@ -1,5 +1,12 @@
 
-pub static CONVERSION_TABLE: &'static [(&str, &str)] = &[
+pub static HIRAGANA_SMALL_TSU: &'static char = &'っ';
+pub static KATAKANA_SMALL_TSU: &'static char = &'ッ';
+
+pub static REPEATABLE_CHARACTERS: &'static [char] = &[
+    'k', 's', 't', 'c', 'h', 'f', 'm', 'y', 'r', 'w', 'g', 'z', 'j', 'd', 'b', 'p',
+];
+
+pub static CONVERSION_TABLE: &'static [(&str, &str, &str)] = &[
 
     ("a", "あ"),
     ("i", "い"),
@@ -90,6 +97,7 @@ pub static CONVERSION_TABLE: &'static [(&str, &str)] = &[
     ("pe", "ぺ"),
     ("po", "ぽ"),
 
+    /*
     ("kya", "きゃ"),
     ("kyu", "きゅ"),
     ("kyo", "きょ"),
@@ -133,6 +141,7 @@ pub static CONVERSION_TABLE: &'static [(&str, &str)] = &[
     ("pya", "ぴゃ"),
     ("pyu", "ぴゅ"),
     ("pyo", "ぴょ"),
+    */
 
     // todo katakana / (hentaigana for fun?) + small tsu + small characters
 
