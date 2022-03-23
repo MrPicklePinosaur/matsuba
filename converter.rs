@@ -1,12 +1,14 @@
 
 use std::collections::HashMap;
+use std::collections::LinkedList;
 
 use super::conversion::{CONVERSION_TABLE};
 
 #[derive(Debug)]
 pub struct State {
     pub accepting: Option<String>,
-    pub transitions: HashMap<char, Box<State>>
+    pub transitions: HashMap<char, Box<State>>,
+    pub depth: usize, // distance from staring state
 }
 
 #[derive(Debug)]
@@ -14,15 +16,16 @@ pub struct Converter<'a> {
     pub start_state: &'a State,
     pub cur_state: &'a State,
     pub output: String,
-    pub depth: u8, // depth of state in dfa (root is 0)
+    pub input: LinkedList<char>,
 }
 
 impl State {
 
-    pub fn new() -> Self {
+    pub fn new(depth: usize) -> Self {
         State{
             accepting: None, // empty string does not accept
             transitions: HashMap::new(),
+            depth: depth,
         }
     }
 }
@@ -33,43 +36,63 @@ impl<'a> Converter<'a> {
         Converter{
             start_state: start_state,
             cur_state: start_state,
-            output: String::from(""),
-            depth: 0,
+            output: String::from(""),    // stack structure
+            input: LinkedList::new(), // queue structure
         }
     }
 
-    pub fn consume_char(&mut self, ch: char) {
+    pub fn input_char(&mut self, ch: char) {
+        self.input.push_front(ch);
+        self.step_dfa();
+    }
 
+    pub fn accept(&mut self) {
+
+    }
+
+    fn step_dfa(&mut self) {
+
+        if self.input.is_empty() {
+            return; // maybe output a warning
+        }
+
+        let ch = self.input.pop_back().unwrap();
         self.output.push(ch);
-        self.cur_state = match self.cur_state.transitions.get(&ch) {
+
+        // attempt to transition on input character
+        match self.cur_state.transitions.get(&ch) {
             Some(ref x) => {
-                self.depth += 1;
-                x
+                self.cur_state = x;
             },
             None => {
-                self.depth = 0;
-                self.start_state
-            }
+                self.cur_state = self.start_state;
+
+                // attempt transition again but from start_state
+                match self.cur_state.transitions.get(&ch) {
+                    Some(ref x) => { self.cur_state = x; },
+                    None => {},
+                }
+            },
         };
 
         // check if we are in accepting state
         match self.cur_state.accepting {
             Some(ref x) => {
-                for i in 0..self.depth {
+                for i in 0..self.cur_state.depth {
                     self.output.pop();
                 }
                 self.output.push_str(x);
                 self.cur_state = self.start_state;
-                self.depth = 0;
             },
             None => {}
         }
+
     }
 }
 
 pub fn build_dfa() -> State {
     
-    let mut new_dfa = State::new();
+    let mut new_dfa = State::new(0);
 
     for conv in CONVERSION_TABLE {
         let mut cur_state: &mut State = &mut new_dfa;
@@ -77,7 +100,7 @@ pub fn build_dfa() -> State {
 
             // create state of does not exist
             if !cur_state.transitions.contains_key(&ch) {
-                let new_state = State::new();
+                let new_state = State::new(i+1);
                 cur_state.transitions.insert(ch, Box::new(new_state));
             }
 

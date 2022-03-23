@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut c = Converter::new(&dfa);
 
     for ch in "kopnnnichiha makkunn desu".chars() {
-        c.consume_char(ch);
+        c.input_char(ch);
     }
 
     println!("{}", c.output);
