@@ -6,7 +6,7 @@ use super::conversion::*;
 
 #[derive(Debug)]
 pub struct State {
-    pub accepting: Option<String>,
+    pub accepting: Option<(String, String)>,
     pub transitions: HashMap<char, Box<State>>,
     pub depth: usize, // distance from staring state
 }
@@ -57,10 +57,11 @@ impl<'a> Converter<'a> {
         }
 
         let ch = self.input.pop_back().unwrap();
+        let lowercase_ch = ch.to_ascii_lowercase();
         let prev_ch = self.output.chars().last();
 
         // attempt to transition on input character
-        match self.cur_state.transitions.get(&ch) {
+        match self.cur_state.transitions.get(&lowercase_ch) {
             Some(ref x) => {
                 self.cur_state = x;
             },
@@ -68,7 +69,7 @@ impl<'a> Converter<'a> {
                 self.cur_state = self.start_state;
 
                 // attempt transition again but from start_state
-                match self.cur_state.transitions.get(&ch) {
+                match self.cur_state.transitions.get(&lowercase_ch) {
                     Some(ref x) => { self.cur_state = x; },
                     None => {},
                 }
@@ -78,9 +79,14 @@ impl<'a> Converter<'a> {
         // small tsu expansion
         if prev_ch.is_some() {
             let prev_ch = prev_ch.unwrap().clone();
-            if ch == prev_ch {
+            if ch == prev_ch && REPEATABLE_CHARACTERS.contains(&lowercase_ch) {
                 self.output.pop();
-                self.output.push(HIRAGANA_SMALL_TSU.clone());
+
+                let small_tsu = match ch.is_ascii_lowercase() {
+                    true  => HIRAGANA_SMALL_TSU,
+                    false => KATAKANA_SMALL_TSU,
+                }.clone();
+                self.output.push(small_tsu);
             }
         }
 
@@ -89,10 +95,18 @@ impl<'a> Converter<'a> {
         // check if we are in accepting state
         match self.cur_state.accepting {
             Some(ref x) => {
-                for i in 0..self.cur_state.depth {
-                    self.output.pop();
+
+                let mut is_lower: bool = false;
+                for _ in 0..self.cur_state.depth {
+                    is_lower = self.output.pop().unwrap().is_ascii_lowercase();
                 }
-                self.output.push_str(x);
+
+                // decide if converting hiragana or katakana
+                let output_ch = match is_lower {
+                    true => &x.0,
+                    false => &x.1,
+                };
+                self.output.push_str(output_ch);
                 self.cur_state = self.start_state;
             },
             None => {}
@@ -120,7 +134,7 @@ pub fn build_dfa() -> State {
 
             // mark as accepting if last char
             if i == conv.0.len()-1 {
-                cur_state.accepting = Some(conv.1.to_string());
+                cur_state.accepting = Some((conv.1.to_string(), conv.2.to_string()));
             } 
         }
     }
