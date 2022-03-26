@@ -8,4 +8,4 @@ name = "matsuba"
 path = "matsuba.rs"
 
 [dependencies]
-x11rb = "0.9.0"
+x11rb = { version = "0.9.0", features = [] }

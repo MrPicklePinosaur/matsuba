@@ -46,8 +46,14 @@ impl<'a> Converter<'a> {
         self.step_dfa();
     }
 
-    pub fn accept(&mut self) {
+    pub fn del_char(&mut self) {
 
+    }
+
+    pub fn accept(&mut self) {
+        self.cur_state = self.start_state;
+        self.output.clear();
+        self.input.clear();
     }
 
     fn step_dfa(&mut self) {

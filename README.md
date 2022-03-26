@@ -9,3 +9,7 @@
  $ cargo run
 ```
 
+## TODO
+
+- [ ] get keycodes from xmodmap
+

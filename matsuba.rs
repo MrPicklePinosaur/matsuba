@@ -6,11 +6,16 @@ use x11rb::COPY_DEPTH_FROM_PARENT;
 
 mod converter;
 mod conversion;
+mod keycode;
+mod keysym;
+mod error;
 
 use converter::*;
+use keycode::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
+    /*
     let dfa = build_dfa();
     let mut c = Converter::new(&dfa);
 
@@ -22,8 +27,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 
-/*
+    */
+    keycode::load_xmodmap();
+    Ok(())
+
     // xcb init
+    /*
     let (conn, screen_num) = x11rb::connect(None)?;
     let screen = &conn.setup().roots[screen_num];
 
@@ -70,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 conn.flush()?;
             }
             Event::KeyPress(event) => {
-                println!("keypress {}", event.detail);
+                println!("keypress {}", event.state);
             }
             _ => {
 
@@ -80,6 +89,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     drop(conn);
     Ok(())
-*/
+    */
 }
 
