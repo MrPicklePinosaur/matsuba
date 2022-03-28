@@ -9,9 +9,11 @@ mod conversion;
 mod keycode;
 mod keysym;
 mod error;
+mod xcb;
 
 use converter::*;
 use keycode::*;
+use xcb::draw_text;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
@@ -55,6 +57,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &values_list,
     )?;
 
+    // generate font
+
     conn.map_window(win)?;
     conn.flush()?;
 
@@ -74,7 +78,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let keysym = keymap.get(&(event.state,event.detail)).unwrap();
                 // println!("keypress {}", keysym.as_char().unwrap());
                 c.input_char(keysym.as_char().unwrap());
-                println!("{}", c.output);
+                draw_text(&conn, screen, win, 10, 140, &c.output);
+                conn.flush()?;
             }
             _ => {
 
