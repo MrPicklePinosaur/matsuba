@@ -15,24 +15,16 @@ use keycode::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    /*
     let dfa = build_dfa();
     let mut c = Converter::new(&dfa);
 
-    for ch in "kopnnnichiha makkkkkunn desu AHAHAHHI".chars() {
-        c.input_char(ch);
-    }
+    // for ch in "kopnnnichiha makkkkkunn desu AHAHAHHI".chars() {
+    //     c.input_char(ch);
+    // }
 
-    println!("{}", c.output);
-
-    Ok(())
-
-    */
-    keycode::load_xmodmap();
-    Ok(())
+    let keymap = keycode::load_xmodmap().unwrap();
 
     // xcb init
-    /*
     let (conn, screen_num) = x11rb::connect(None)?;
     let screen = &conn.setup().roots[screen_num];
 
@@ -79,7 +71,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 conn.flush()?;
             }
             Event::KeyPress(event) => {
-                println!("keypress {}", event.state);
+                let keysym = keymap.get(&(event.state,event.detail)).unwrap();
+                // println!("keypress {}", keysym.as_char().unwrap());
+                c.input_char(keysym.as_char().unwrap());
+                println!("{}", c.output);
             }
             _ => {
 
@@ -89,6 +84,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     drop(conn);
     Ok(())
-    */
 }
 
