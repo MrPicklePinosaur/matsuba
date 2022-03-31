@@ -11,5 +11,7 @@
 
 ## TODO
 
-- [ ] get keycodes from xmodmap
+- [x] get keycodes from xmodmap
+- [ ] capture all keypresses (even when not focused)
+- [ ] figure out how to have floating window
 
