@@ -50,6 +50,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Point { x: 100, y: 100 },
     ];
 
+    // query pictformats
+    let pictformats = query_pict_formats(&conn)?.reply()?;
+    let format = pictformats.formats[0];
+
+    // create picture
+    let pid = create_win(&conn, screen)?;
+    let values_list = CreatePictureAux::default()
+        .polymode(PolyMode::IMPRECISE)
+        .polyedge(PolyEdge::SMOOTH);
+    create_picture(&conn, pid, win, format.id, &values_list)?;
+
     // init font stuff
     let fc = Fontconfig::new().unwrap();
     let font = fc.find("sans", None).unwrap();
@@ -61,14 +72,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     face.set_char_size(40*64, 0, 50, 0)?;
 
     face.load_char('あ' as usize, LoadFlag::RENDER)?;
-    println!("{:?}", face.glyph().metrics());
-    face.load_char('い' as usize, LoadFlag::RENDER)?;
-    println!("{:?}", face.glyph().metrics());
+    let glyph_metrics = face.glyph().metrics();
+    println!("{:?}", glyph_metrics);
 
-    let pictformats = query_pict_formats(&conn)?.reply()?;
-    println!("{:?}", pictformats);
-    let pictformat = pictformats.formats[0];
-    let glyphset = GlyphsetWrapper::create_glyph_set(&conn, pictformat.id)?;
+    // convert freetype glyph to xcb glyph
+    let gsid = conn.generate_id()?;
+    create_glyph_set(&conn, gsid, format.id)?;
+
+    // see https://freetype.org/freetype2/docs/glyphs/glyphs-3.html#section-3 for info on what each field is
+    let glyphinfo = Glyphinfo {
+        width: glyph_metrics.width as u16,
+        height: glyph_metrics.height as u16,
+        x: glyph_metrics.horiBearingX as i16,
+        y: glyph_metrics.horiBearingY as i16,
+        x_off: glyph_metrics.horiAdvance as i16,
+        y_off: glyph_metrics.vertAdvance as i16,
+    };
+    add_glyphs(&conn, gsid, &['あ' as u32], &[glyphinfo], face.glyph().bitmap().buffer())?;
+
+    // composite_glyphs32(&conn, )?; 
+
+    // TODO free stuff
+
     Ok(())
 
 /*
@@ -78,7 +103,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let event = conn.wait_for_event()?;
         match event {
             Event::Expose(_event) => {
-                conn.poly_line(CoordMode::PREVIOUS, win, foreground, &points)?; 
+                conn.poly_line(CoordMode::PREVIOUS, win, foreground, &points)?;
                 conn.flush()?;
             }
             Event::KeyPress(event) => {
