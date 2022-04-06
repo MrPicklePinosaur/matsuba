@@ -1,17 +1,21 @@
 
 use x11rb::connection::Connection;
 use x11rb::protocol::xproto::*;
+use x11rb::protocol::render::*;
 use x11rb::protocol::Event;
+use fontconfig::Fontconfig;
+use freetype::Library;
+use freetype::face::LoadFlag;
 
 mod converter;
 mod conversion;
 mod keycode;
 mod keysym;
 mod error;
-mod xcb;
+mod x;
 
 use converter::*;
-use xcb::*;
+use x::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
@@ -46,6 +50,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Point { x: 100, y: 100 },
     ];
 
+    // init font stuff
+    let fc = Fontconfig::new().unwrap();
+    let font = fc.find("sans", None).unwrap();
+
+    println!("{}: {}", font.name, font.path.display());
+
+    let lib = Library::init()?;
+    let face = lib.new_face(font.path.as_os_str(), 0)?;
+    face.set_char_size(40*64, 0, 50, 0)?;
+
+    face.load_char('あ' as usize, LoadFlag::RENDER)?;
+    println!("{:?}", face.glyph().metrics());
+    face.load_char('い' as usize, LoadFlag::RENDER)?;
+    println!("{:?}", face.glyph().metrics());
+
+    let pictformats = query_pict_formats(&conn)?.reply()?;
+    println!("{:?}", pictformats);
+    let pictformat = pictformats.formats[0];
+    let glyphset = GlyphsetWrapper::create_glyph_set(&conn, pictformat.id)?;
+    Ok(())
+
+/*
+    // main loop
     let mut running = true;
     while running {
         let event = conn.wait_for_event()?;
@@ -69,5 +96,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     drop(conn);
     Ok(())
+*/
 }
 

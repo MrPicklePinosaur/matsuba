@@ -9,6 +9,10 @@
  $ cargo run
 ```
 
+## DEPENDENCIES
+
+- fontconfig
+
 ## TODO
 
 - [x] get keycodes from xmodmap
