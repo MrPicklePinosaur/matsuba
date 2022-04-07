@@ -12,6 +12,8 @@ mod conversion;
 mod keycode;
 mod keysym;
 mod error;
+mod db;
+mod cli;
 mod x;
 
 use converter::*;
@@ -55,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let format = pictformats.formats[0];
 
     // create picture
-    let pid = create_win(&conn, screen)?;
+    let pid = conn.generate_id()?;
     let values_list = CreatePictureAux::default()
         .polymode(PolyMode::IMPRECISE)
         .polyedge(PolyEdge::SMOOTH);
@@ -89,14 +91,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         y_off: glyph_metrics.vertAdvance as i16,
     };
     add_glyphs(&conn, gsid, &['あ' as u32], &[glyphinfo], face.glyph().bitmap().buffer())?;
-
-    // composite_glyphs32(&conn, )?; 
+    composite_glyphs8(&conn, PictOp::OVER, foreground, pid, format.id, gsid, 100, 100, &['あ' as u8])?;
 
     // TODO free stuff
 
-    Ok(())
-
-/*
     // main loop
     let mut running = true;
     while running {
@@ -121,6 +119,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     drop(conn);
     Ok(())
-*/
 }
 
