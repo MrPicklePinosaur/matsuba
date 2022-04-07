@@ -21,7 +21,8 @@ project](https://www.edrdg.org/jmdict/edict.html). Specifically, the
 [JMdict_e](http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz) (JMdict
 english-japanese only) xml file is fetched. A script is provided to populate
 your dictionary, along with some options on what word lists to fetch (bio,
-sports, names etc).
+sports, names etc), you can see a full list of 'filters'
+[here](https://www.edrdg.org/jmdictdb/cgi-bin/edhelp.py?svc=jmdict&sid=#kw_fld).
 
 ## RUNNING FOR DEVELOPMENT
 

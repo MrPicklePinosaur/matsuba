@@ -13,6 +13,7 @@ mod keycode;
 mod keysym;
 mod error;
 mod db;
+mod xmlparse;
 mod cli;
 mod x;
 
@@ -21,6 +22,11 @@ use x::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
+    let path = std::path::Path::new("./jmdict.xml");
+    xmlparse::parse_jmdict_xml(path);
+
+    Ok(())
+    /*
     let dfa = build_dfa();
     let mut c = Converter::new(&dfa);
 
@@ -119,5 +125,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     drop(conn);
     Ok(())
+    */
 }
 

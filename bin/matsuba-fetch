@@ -1,0 +1,21 @@
+#!/bin/sh
+
+## simple script to populate matsuba database
+##
+## DEPENDENCIES:
+## - wget
+## - gzip
+##
+## USAGE: 
+##   matsuba-fetch <filters>
+
+dict_url='http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz'
+
+tmp_gz="$(mktemp)"
+tmp_raw="$(mktemp)"
+
+wget -O - "$dict_url" > "$tmp_gz"
+gzip -dc "$tmp_gz" > "$tmp_raw"
+echo "$tmp_raw"
+
+rm -f "$tmp_gz" "$tmp_raw"
