@@ -4,10 +4,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use roxmltree::{Document, ParsingOptions, Node};
 
-pub struct Conversion {
-    r_ele: Vec<String>,
-    k_ele: String,
-}
+use super::db::Entry;
 
 pub fn parse_jmdict_xml(path: &Path) {
 
@@ -32,7 +29,7 @@ pub fn parse_jmdict_xml(path: &Path) {
 
 pub fn parse_entry(entry_node: &Node) {
 
-    let mut conversions: HashMap<&str, Conversion> = HashMap::new();
+    let mut entries: HashMap<&str, Entry> = HashMap::new();
 
     for elem in entry_node.children().filter(|n| n.is_element()) {
         // println!("{:?}", elem);
@@ -47,13 +44,13 @@ pub fn parse_entry(entry_node: &Node) {
                     .text().unwrap();
 
                 // ignore duplicate (could also use nightly 'try_insert')
-                if conversions.contains_key(keb_text) {
+                if entries.contains_key(keb_text) {
                     return;
                 }
 
-                conversions.insert(
+                entries.insert(
                     keb_text,
-                    Conversion{ r_ele: Vec::new(), k_ele: keb_text.to_string()}
+                    Entry{ r_ele: Vec::new(), k_ele: keb_text.to_string()}
                 );
 
             },
@@ -68,20 +65,19 @@ pub fn parse_entry(entry_node: &Node) {
                 // check for re_restr (reading only applies to specific kanji elements)
                 let mut add_reading_to: Vec<&str> = Vec::new();
                 for re_restr_node in elem.children().filter(|n| n.tag_name().name() == "re_restr") {
-                    println!("{:?}", re_restr_node);
                     let re_restr_text = re_restr_node.text().unwrap();
                     add_reading_to.push(re_restr_text);
                 }
 
                 // if no re_restr, assume all
                 if add_reading_to.len() == 0 {
-                    for conv in conversions.values_mut() {
+                    for conv in entries.values_mut() {
                         conv.r_ele.push(reb_text.to_string());
                     }
                 } else {
                     for keb in add_reading_to {
                         // TODO maybe check if keb not exist
-                        conversions
+                        entries
                             .get_mut(keb).unwrap()
                             .r_ele.push(reb_text.to_string());
                     }
@@ -91,5 +87,11 @@ pub fn parse_entry(entry_node: &Node) {
             _ => {},
         }
 
+    }
+
+    // insert into db (not sure if this should be done here)
+    for (k, v) in entries.iter() {
+        println!("{}", k);
+        println!("{:?}", v.r_ele);
     }
 }
