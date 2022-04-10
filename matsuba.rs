@@ -16,6 +16,7 @@ mod db;
 mod xmlparse;
 mod cli;
 mod x;
+mod argparse;
 
 use converter::*;
 use x::*;

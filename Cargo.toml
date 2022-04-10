@@ -2,6 +2,9 @@
 name = "matsuba"
 version = "0.1.0"
 edition = "2018"
+authors = ["pinosaur"]
+description = "lightweight japanese ime"
+repository = "https://github.com/MrPicklePinosaur/matsuba"
 
 [[bin]]
 name = "matsuba"
