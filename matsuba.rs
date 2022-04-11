@@ -20,11 +20,15 @@ mod argparse;
 
 use converter::*;
 use x::*;
+use db::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let path = std::path::Path::new("./jmdict.xml");
-    xmlparse::parse_jmdict_xml(path);
+
+    let conn = db::get_connection()?;
+    db::init(&conn)?;
+    xmlparse::parse_jmdict_xml(&conn, path)?;
 
     Ok(())
     /*

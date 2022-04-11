@@ -37,6 +37,7 @@ sports, names etc), you can see a full list of 'filters'
 - [ ] figure out how to have floating window
 - [ ] fetch kanji data from EDICT
 - [ ] set up database (probably sqlite)
+- [ ] arg parsing
 
 ## RESOURCES
 

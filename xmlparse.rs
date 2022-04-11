@@ -4,32 +4,37 @@ use std::collections::HashMap;
 use std::path::Path;
 use roxmltree::{Document, ParsingOptions, Node};
 
-use super::db::Entry;
+use super::db::{Connection, Entry};
+use super::db::insert_entry;
+use super::error::{BoxResult, SimpleError};
 
-pub fn parse_jmdict_xml(path: &Path) {
+pub fn parse_jmdict_xml(conn: &Connection, path: &Path) -> BoxResult<()> {
 
     let text = std::fs::read_to_string(path).unwrap();
     let opt = ParsingOptions { allow_dtd: true };
-    let doc = match Document::parse_with_options(&text, opt) {
-        Ok(doc) => doc,
-        Err(e) => {
-            println!("error: {}", e);
-            return;
-        },
-    };
+    let doc = Document::parse_with_options(&text, opt)?;
 
     // JMdict element node should be the last child
     let root = doc.root().last_child().unwrap();
 
     for node in root.children().filter(|n| n.is_element()) {
         println!(">>>>> {:?}", node);
-        parse_entry(&node);
+        let entries = parse_entry(&node)?;
+
+        // insert into db (not sure if this should be done here)
+        for (k, v) in entries.iter() {
+            println!("{}", k);
+            println!("{:?}", v.r_ele);
+            insert_entry(&conn, v)?;
+        }
     }
+
+    Ok(())
 }
 
-pub fn parse_entry(entry_node: &Node) {
+pub fn parse_entry(entry_node: &Node) -> BoxResult<HashMap<String, Entry>> {
 
-    let mut entries: HashMap<&str, Entry> = HashMap::new();
+    let mut entries: HashMap<String, Entry> = HashMap::new();
 
     for elem in entry_node.children().filter(|n| n.is_element()) {
         // println!("{:?}", elem);
@@ -45,11 +50,12 @@ pub fn parse_entry(entry_node: &Node) {
 
                 // ignore duplicate (could also use nightly 'try_insert')
                 if entries.contains_key(keb_text) {
-                    return;
+                    // return Err(SimpleError::new(""));
+                    break;
                 }
 
                 entries.insert(
-                    keb_text,
+                    keb_text.to_string(),
                     Entry{ r_ele: Vec::new(), k_ele: keb_text.to_string()}
                 );
 
@@ -76,9 +82,8 @@ pub fn parse_entry(entry_node: &Node) {
                     }
                 } else {
                     for keb in add_reading_to {
-                        // TODO maybe check if keb not exist
                         entries
-                            .get_mut(keb).unwrap()
+                            .get_mut(keb).ok_or(SimpleError::new("keb does not exist"))?
                             .r_ele.push(reb_text.to_string());
                     }
                 }
@@ -89,9 +94,5 @@ pub fn parse_entry(entry_node: &Node) {
 
     }
 
-    // insert into db (not sure if this should be done here)
-    for (k, v) in entries.iter() {
-        println!("{}", k);
-        println!("{:?}", v.r_ele);
-    }
+    Ok(entries)
 }
