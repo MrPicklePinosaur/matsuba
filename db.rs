@@ -1,14 +1,27 @@
 
-use rusqlite::{Result, params};
+use rusqlite::{Result, ToSql, params};
 pub use rusqlite::Connection;
 
 pub struct Entry {
-    pub r_ele: Vec<String>,
+    pub r_ele: String,
     pub k_ele: String,
+    pub frequency: u8,
+}
+
+impl Entry {
+    
+    pub fn new(r_ele: String, k_ele: String) -> Self {
+        Entry {
+            r_ele,
+            k_ele,
+            frequency: 0,
+        }
+    }
 }
 
 pub fn get_connection() -> Result<Connection> {
-    return Connection::open_in_memory();
+    // TODO make this config variable
+    return Connection::open("./db/matsuba.db3");
 }
 
 pub fn init(conn: &Connection) -> Result<()> {
@@ -28,15 +41,39 @@ pub fn init(conn: &Connection) -> Result<()> {
 
 pub fn insert_entry(conn: &Connection, entry: &Entry) -> Result<()> {
 
-    // TODO maybe batch into a transaction for faster
-    for reading in entry.r_ele.iter() {
-        conn.execute("
-            INSERT INTO entry (r_ele, k_ele)
-            VALUES (?1, ?2)
-            ", params![reading, entry.k_ele]
-        )?;
-    }
+    conn.execute("
+        INSERT INTO entry (r_ele, k_ele)
+        VALUES (?1, ?2)
+        ", params![entry.r_ele, entry.k_ele]
+    )?;
 
     Ok(())
+}
+
+pub fn search(conn: &Connection, query: &str) -> Result<Vec<Entry>> {
+
+    let mut query = conn.prepare("
+        SELECT r_ele, k_ele, frequency
+        FROM entry
+        WHERE r_ele = ?1
+        "
+    )?;
+
+    /*
+    let entry_it = query.query_map(&[&query as &ToSql], |row| {
+        Ok(Entry::new(
+            row.get(0)?,
+            row.get(1)?
+        ))
+    })?;
+
+    // TODO wonder if this can be better
+    for entry in entry_it {
+        output.push(entry?);
+    }
+    */
+    let mut output: Vec<Entry> = Vec::new();
+
+    Ok(output)
 }
 

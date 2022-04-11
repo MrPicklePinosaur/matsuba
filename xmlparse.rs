@@ -8,7 +8,7 @@ use super::db::{Connection, Entry};
 use super::db::insert_entry;
 use super::error::{BoxResult, SimpleError};
 
-pub fn parse_jmdict_xml(conn: &Connection, path: &Path) -> BoxResult<()> {
+pub fn parse_jmdict_xml(conn: &mut Connection, path: &Path) -> BoxResult<()> {
 
     let text = std::fs::read_to_string(path).unwrap();
     let opt = ParsingOptions { allow_dtd: true };
@@ -17,24 +17,18 @@ pub fn parse_jmdict_xml(conn: &Connection, path: &Path) -> BoxResult<()> {
     // JMdict element node should be the last child
     let root = doc.root().last_child().unwrap();
 
+    let tx = conn.transaction()?;
     for node in root.children().filter(|n| n.is_element()) {
-        println!(">>>>> {:?}", node);
-        let entries = parse_entry(&node)?;
-
-        // insert into db (not sure if this should be done here)
-        for (k, v) in entries.iter() {
-            println!("{}", k);
-            println!("{:?}", v.r_ele);
-            insert_entry(&conn, v)?;
-        }
+        parse_entry(&tx, &node)?;
     }
 
+    tx.commit()?;
     Ok(())
 }
 
-pub fn parse_entry(entry_node: &Node) -> BoxResult<HashMap<String, Entry>> {
+fn parse_entry(conn: &Connection, entry_node: &Node) -> BoxResult<()> {
 
-    let mut entries: HashMap<String, Entry> = HashMap::new();
+    let mut entries: HashMap<String, Vec<Entry>> = HashMap::new();
 
     for elem in entry_node.children().filter(|n| n.is_element()) {
         // println!("{:?}", elem);
@@ -56,7 +50,7 @@ pub fn parse_entry(entry_node: &Node) -> BoxResult<HashMap<String, Entry>> {
 
                 entries.insert(
                     keb_text.to_string(),
-                    Entry{ r_ele: Vec::new(), k_ele: keb_text.to_string()}
+                    Vec::new(),
                 );
 
             },
@@ -77,14 +71,14 @@ pub fn parse_entry(entry_node: &Node) -> BoxResult<HashMap<String, Entry>> {
 
                 // if no re_restr, assume all
                 if add_reading_to.len() == 0 {
-                    for conv in entries.values_mut() {
-                        conv.r_ele.push(reb_text.to_string());
+                    for (keb, conv) in entries.iter_mut() {
+                        conv.push(Entry::new(reb_text.to_string(), keb.to_string()));
                     }
                 } else {
                     for keb in add_reading_to {
                         entries
                             .get_mut(keb).ok_or(SimpleError::new("keb does not exist"))?
-                            .r_ele.push(reb_text.to_string());
+                            .push(Entry::new(reb_text.to_string(), keb.to_string()));
                     }
                 }
 
@@ -94,5 +88,11 @@ pub fn parse_entry(entry_node: &Node) -> BoxResult<HashMap<String, Entry>> {
 
     }
 
-    Ok(entries)
+    for group in entries.values() {
+        for entry in group.iter() {
+            println!("{} - {}", entry.k_ele, entry.r_ele);
+            insert_entry(conn, entry)?;
+        }
+    }
+    Ok(())
 }

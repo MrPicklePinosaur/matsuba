@@ -17,6 +17,7 @@ mod xmlparse;
 mod cli;
 mod x;
 mod argparse;
+mod config;
 
 use converter::*;
 use x::*;
@@ -24,11 +25,11 @@ use db::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    let path = std::path::Path::new("./jmdict.xml");
+    let path = std::path::Path::new("./tests/jmdict_full.xml");
 
-    let conn = db::get_connection()?;
-    db::init(&conn)?;
-    xmlparse::parse_jmdict_xml(&conn, path)?;
+    let mut conn = db::get_connection()?;
+    // db::init(&conn)?;
+    // xmlparse::parse_jmdict_xml(&mut conn, path)?;
 
     Ok(())
     /*
