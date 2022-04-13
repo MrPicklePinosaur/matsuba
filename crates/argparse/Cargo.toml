@@ -1,0 +1,7 @@
+[package]
+name = "argparse"
+version = "0.1.0"
+edition = "2018"
+authors = ["pinosaur"]
+description = "a tiny argparsing library"
+repository = "https://github.com/MrPicklePinosaur/matsuba"

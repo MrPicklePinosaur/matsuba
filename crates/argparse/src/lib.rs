@@ -1,14 +1,16 @@
 
+mod error;
+
 use std::vec::Vec;
 use std::option::Option;
 
-use super::error::{BoxResult, SimpleError};
+use error::{BoxResult, Error};
 
 // mini argparsing library
 
 type Commands = Vec<Command>;
 // type HandlerFn = fn(arg_it: dyn Iterator<Item = String>);
-type HandlerFn = fn();
+type HandlerFn = fn(flagparse: FlagParse);
 
 pub struct Cli {
     pub program_name: String,
@@ -26,10 +28,14 @@ pub struct Command {
 
 pub struct Flag {
     pub desc: String,
-    pub optional: bool,
+    pub required: bool,
     pub parameter: bool,
     pub short: char,
     pub long: Option<String>,
+}
+
+pub struct FlagParse<'a> {
+    flags: Vec<(&'a Flag, Option<String>)>,
 }
 
 impl Cli {
@@ -46,6 +52,8 @@ impl Cli {
             .find(|c| &c.command_name == cmd_name).unwrap();
 
         // parse flags for command
+        let mut flagparse = FlagParse::new();
+
         let mut next = arg_it.next();
         while next.is_some() {
 
@@ -62,12 +70,22 @@ impl Cli {
 
             if flag.is_none() {
                 // TODO ugly
-                return Err(Box::new(SimpleError::new("invalid flag")));
+                return Err(Box::new(Error::new("invalid flag")));
             }
+            let flag = flag.unwrap();
 
+            // check if flag is expecting value
+            if flag.parameter == false {
+                let value = arg_it.next().ok_or(Error::new("expecting value"))?;
+                flagparse.add_flag_with_value(flag, value);
+            } else {
+                flagparse.add_flag(flag);
+            }
 
             next = arg_it.next();
         }
+
+        // TODO check if all mandatory flags were called
 
         // pass control to command handler
         let dispatch = cmd.handler;
@@ -82,7 +100,7 @@ impl Flag {
     pub fn new(short: char) -> Self {
         Flag {
             desc: String::new(),
-            optional: true,
+            required: false,
             parameter: false,
             short: short,
             long: None,
@@ -93,8 +111,8 @@ impl Flag {
         self.desc = desc;
         self
     }
-    pub fn optional(mut self) -> Self {
-        self.optional = true;
+    pub fn required(mut self) -> Self {
+        self.required = true;
         self
     }
     pub fn parameter(mut self) -> Self {
@@ -104,6 +122,31 @@ impl Flag {
     pub fn long(mut self, long: String) -> Self {
         self.long = Some(long);
         self
+    }
+
+}
+
+impl<'a> FlagParse<'a> {
+
+    pub fn get_flag_value(&self, short: char) -> Option<&String> {
+        match self.flags.iter().find(|p| p.0.short == short) {
+            Some(p) => p.1.as_ref(),
+            None => None,
+        }
+    }
+
+    fn new() -> Self {
+        FlagParse {
+            flags: Vec::new(),
+        }
+    }
+
+    fn add_flag(&mut self, flag: &'a Flag) {
+        self.flags.push((flag, None));
+    }
+
+    fn add_flag_with_value(&mut self, flag: &'a Flag, value: &str) {
+        self.flags.push((flag, Some(value.to_string())));
     }
 
 }

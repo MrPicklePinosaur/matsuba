@@ -7,22 +7,12 @@ use fontconfig::Fontconfig;
 use freetype::Library;
 use freetype::face::LoadFlag;
 
-mod converter;
-mod conversion;
-mod keycode;
-mod keysym;
-mod error;
-mod db;
-mod xmlparse;
-mod cli;
-mod x;
-mod argparse;
-mod config;
-
-use converter::*;
-use x::*;
-use db::*;
-use argparse::*;
+use matsuba::{
+    converter,
+    x,
+    db,
+};
+use argparse::{Cli, Command, Flag};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
@@ -33,9 +23,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Command {
                 desc: String::new(),
                 command_name: "init".to_string(),
-                handler: || { },
+                handler: |flagparse| { println!("called init"); },
                 flags: vec![
-                    Flag::new('a').optional()
+                    Flag::new('a').parameter()
                 ],
             },
         ],
