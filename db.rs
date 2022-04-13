@@ -2,6 +2,7 @@
 use rusqlite::{Result, ToSql, params};
 pub use rusqlite::Connection;
 
+#[derive(Debug)]
 pub struct Entry {
     pub r_ele: String,
     pub k_ele: String,
@@ -50,17 +51,16 @@ pub fn insert_entry(conn: &Connection, entry: &Entry) -> Result<()> {
     Ok(())
 }
 
-pub fn search(conn: &Connection, query: &str) -> Result<Vec<Entry>> {
+pub fn search(conn: &Connection, reading: &str) -> Result<Vec<Entry>> {
 
     let mut query = conn.prepare("
         SELECT r_ele, k_ele, frequency
         FROM entry
-        WHERE r_ele = ?1
+        WHERE r_ele = ?
         "
     )?;
 
-    /*
-    let entry_it = query.query_map(&[&query as &ToSql], |row| {
+    let entry_it = query.query_map(&[reading], |row| {
         Ok(Entry::new(
             row.get(0)?,
             row.get(1)?
@@ -68,11 +68,10 @@ pub fn search(conn: &Connection, query: &str) -> Result<Vec<Entry>> {
     })?;
 
     // TODO wonder if this can be better
+    let mut output: Vec<Entry> = Vec::new();
     for entry in entry_it {
         output.push(entry?);
     }
-    */
-    let mut output: Vec<Entry> = Vec::new();
 
     Ok(output)
 }

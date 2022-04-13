@@ -22,14 +22,35 @@ mod config;
 use converter::*;
 use x::*;
 use db::*;
+use argparse::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    let cli = Cli {
+        program_name: "matsuba".to_string(),
+        synopsis: String::new(),
+        commands: vec![
+            Command {
+                desc: String::new(),
+                command_name: "init".to_string(),
+                handler: || { },
+                flags: vec![
+                    Flag::new('a').optional()
+                ],
+            },
+        ],
+        global_flags: vec![],
+    };
 
     let path = std::path::Path::new("./tests/jmdict_full.xml");
 
     let mut conn = db::get_connection()?;
     // db::init(&conn)?;
     // xmlparse::parse_jmdict_xml(&mut conn, path)?;
+    let res = db::search(&conn, "いぬ")?;
+    for entry in res {
+        println!("{:?}", entry);
+    }
 
     Ok(())
     /*
