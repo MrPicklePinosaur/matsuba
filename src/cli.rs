@@ -43,7 +43,11 @@ pub fn runcli() -> BoxResult<()> {
                 flags: vec![
                     Flag::new('k')
                         .long("kana")
-                        .desc("only perform kana conversion")
+                        .desc("only perform kana conversion"),
+                    Flag::new('c')
+                        .long("count")
+                        .desc("limit for number of conversions to output")
+                        .parameter(),
                 ],
             },
         ],
@@ -78,15 +82,29 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
     let dfa = build_dfa();
     let mut c = Converter::new(&dfa);
 
-    if flagparse.get_flag('k') {
-        for input in flagparse.args {
-            for ch in input.chars() {
-                c.input_char(ch);
-            }
-            println!("{}", c.output);
-            c.accept();
+    let conn = db::get_connection()?;
+
+    for input in flagparse.args.iter() {
+
+        for ch in input.chars() {
+            c.input_char(ch);
+        }
+        let kana = c.accept();
+
+        // if kana flag is passed, don't do any more conversion
+        if flagparse.get_flag('k') {
+            println!("{}", kana);
+            continue;
+        }
+
+        let count = flagparse.get_flag_value::<usize>('c').unwrap_or(1);
+
+        let converted = db::search(&conn, &kana)?;
+        for c in converted.iter().take(count) {
+            println!("{}", c.k_ele);
         }
     }
 
     Ok(())
 }
+

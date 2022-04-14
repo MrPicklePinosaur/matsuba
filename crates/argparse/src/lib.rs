@@ -1,6 +1,7 @@
 
 mod error;
 
+use std::str::FromStr;
 use std::vec::Vec;
 use std::option::Option;
 
@@ -102,10 +103,6 @@ impl Cli {
         Ok(())
     }
 
-    fn parse_flags(&self, flagparse: &mut FlagParse) {
-        
-    }
-
     pub fn help_message(&self) {
 
     }
@@ -145,9 +142,13 @@ impl Flag {
 
 impl<'a> FlagParse<'a> {
 
-    pub fn get_flag_value(&self, short: char) -> Option<&String> {
-        match self.flags.iter().find(|p| p.0.short == short) {
-            Some(p) => p.1.as_ref(),
+    pub fn get_flag_value<T: FromStr>(&self, short: char) -> Option<T> {
+        let pair = self.flags.iter().find(|p| p.0.short == short);
+        if pair.is_none() { return None; }
+        let pair = pair.unwrap();
+
+        match &pair.1 {
+            Some(v) => v.parse::<T>().ok(),
             None => None,
         }
     }

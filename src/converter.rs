@@ -50,10 +50,13 @@ impl<'a> Converter<'a> {
 
     }
 
-    pub fn accept(&mut self) {
+    pub fn accept(&mut self) -> String {
         self.cur_state = self.start_state;
-        self.output.clear();
         self.input.clear();
+
+        let out = self.output.clone();
+        self.output.clear();
+        return out;
     }
 
     fn step_dfa(&mut self) {
