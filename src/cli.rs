@@ -1,8 +1,9 @@
 
 use argparse::{Cli, Command, Flag, FlagParse};
 
-use super::error::{BoxResult};
+use super::error::{BoxResult, SimpleError};
 use super::db;
+use super::xmlparse;
 use super::converter::{Converter, build_dfa};
 
 static HELP_MSG: &str = "\
@@ -61,6 +62,7 @@ pub fn runcli() -> BoxResult<()> {
 }
 
 fn handle_run(flagparse: FlagParse) -> BoxResult<()> {
+
     println!("run command");
 
     Ok(())
@@ -68,13 +70,24 @@ fn handle_run(flagparse: FlagParse) -> BoxResult<()> {
 
 fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
 
-    let path = std::path::Path::new("./tests/jmdict_full.xml");
-    let mut conn = db::get_connection()?;
+    if flagparse.args.len() == 0 {
+        return Err(Box::new(SimpleError::new("invalid number of args")));
+    }
 
-    // db::init(&conn)?;
-    // xmlparse::parse_jmdict_xml(&mut conn, path)?;
+    let path_str = flagparse.args[0];
+    // TODO is this dangerous?
+    let path = std::path::Path::new(&path_str);
+
+    // TODO check if old database already exists
+    return Ok(());
+
+    /*
+    let mut conn = db::get_connection()?;
+    db::init(&conn)?;
+    xmlparse::parse_jmdict_xml(&mut conn, path)?;
 
     Ok(())
+    */
 }
 
 fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {

@@ -1,0 +1,14 @@
+
+[Unit]
+Description=matsuba - the lightweight japanese ime
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=
+ExecStart=matsuba run
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
