@@ -74,7 +74,7 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
         return Err(Box::new(SimpleError::new("invalid number of args")));
     }
 
-    let path_str = flagparse.args[0];
+    let path_str = &flagparse.args[0];
     // TODO is this dangerous?
     let path = std::path::Path::new(&path_str);
 

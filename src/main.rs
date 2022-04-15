@@ -9,7 +9,8 @@ use matsuba::{
 
 fn main() -> BoxResult<()> {
 
-    cli::runcli()?;
+    x::run_x()?;
+    // cli::runcli()?;
     Ok(())
 
 }
