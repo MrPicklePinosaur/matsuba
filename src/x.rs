@@ -35,7 +35,11 @@ pub fn run_x() -> BoxResult<()> {
 
     // query pictformats
     let pictformats = query_pict_formats(&conn)?.reply()?;
-    let format = pictformats.formats[0];
+    // TODO hardcoded pictformat for now
+    let format = pictformats.formats.iter().find(|f| f.id == 41).unwrap();
+    // for pf in pictformats.formats {
+    //     println!("{:?}", pf);
+    // }
 
     // create picture
     let pid = conn.generate_id()?;
@@ -45,7 +49,20 @@ pub fn run_x() -> BoxResult<()> {
     create_picture(&conn, pid, win, format.id, &values_list)?;
 
     // init font stuff
-    init_font(&conn, format, pid)?;
+    let fc = Fontconfig::new().unwrap();
+    let font = fc.find("sans", None).unwrap();
+
+    println!("{}: {}", font.name, font.path.display());
+
+    // freetype init
+    let lib = Library::init()?;
+    let face = lib.new_face(font.path.as_os_str(), 0)?;
+    face.set_char_size(40*64, 0, 50, 0)?;
+
+    // xcb glyph init
+    let gsid = conn.generate_id()?;
+    create_glyph_set(&conn, gsid, format.id)?;
+    create_glyph(&conn, &face, gsid, 'あ')?;
 
     // TODO free stuff
 
@@ -55,6 +72,8 @@ pub fn run_x() -> BoxResult<()> {
         let event = conn.wait_for_event()?;
         match event {
             Event::Expose(_event) => {
+                let glyph_index = face.get_char_index('あ' as usize);
+                composite_glyphs32(&conn, PictOp::OVER, foreground, pid, format.id, gsid, 100, 100, &[glyph_index as u8])?;
             }
             Event::KeyPress(event) => {
                 let keysym = keymap.get(&(event.state,event.detail));
@@ -63,7 +82,7 @@ pub fn run_x() -> BoxResult<()> {
 
                 println!("keypress {}", keysym.as_char().unwrap());
                 // c.input_char(keysym.as_char().unwrap());
-                draw_text(&conn, screen, win, 10, 140, "fixed", &"pee")?;
+                // draw_text(&conn, screen, win, 10, 140, "fixed", &"pee")?;
                 conn.flush()?;
             }
             _ => {
@@ -102,31 +121,6 @@ pub fn create_win<C: Connection>(
     Ok(win)
 }
 
-pub fn init_font<C: Connection>(
-    conn: &C,
-    format: Pictforminfo,
-    pid: u32 // Picture
-) -> BoxResult<()> {
-
-    let fc = Fontconfig::new().unwrap();
-    let font = fc.find("sans", None).unwrap();
-
-    println!("{}: {}", font.name, font.path.display());
-
-    // freetype init
-    let lib = Library::init()?;
-    let face = lib.new_face(font.path.as_os_str(), 0)?;
-    face.set_char_size(40*64, 0, 50, 0)?;
-
-    // xcb glyph init
-    let gsid = conn.generate_id()?;
-    create_glyph_set(conn, gsid, format.id)?;
-
-    create_glyph(conn, &face, gsid, 'あ')?;
-
-    Ok(())
-}
-
 pub fn create_glyph<C: Connection>(
     conn: &C,
     face: &Face,
@@ -134,23 +128,42 @@ pub fn create_glyph<C: Connection>(
     character: char
 ) -> BoxResult<()> {
 
-    face.load_char(character as usize, LoadFlag::RENDER)?;
-    let glyph_metrics = face.glyph().metrics();
+    let glyph_index = face.get_char_index(character as usize);
+    face.load_glyph(glyph_index, LoadFlag::RENDER)?;
 
-    // debug_glyph(face.glyph());
-    println!("{:?}", glyph_metrics);
+    let glyph = face.glyph();
 
     // see https://freetype.org/freetype2/docs/glyphs/glyphs-3.html#section-3 for info on what each field is
     let glyphinfo = Glyphinfo {
-        width: glyph_metrics.width as u16,
-        height: glyph_metrics.height as u16,
-        x: glyph_metrics.horiBearingX as i16,
-        y: glyph_metrics.horiBearingY as i16,
-        x_off: glyph_metrics.horiAdvance as i16,
-        y_off: glyph_metrics.vertAdvance as i16,
+        x: -glyph.bitmap_left() as i16,
+        y: glyph.bitmap_top() as i16,
+        width: glyph.bitmap().width() as u16,
+        height: glyph.bitmap().rows() as u16,
+        x_off: (glyph.advance().x/64) as i16,
+        y_off: (glyph.advance().y/64) as i16,
     };
-    // add_glyphs(conn, gsid, &['あ' as u32], &[glyphinfo], face.glyph().bitmap().buffer())?;
-    // composite_glyphs8(conn, PictOp::OVER, foreground, pid, format.id, gsid, 100, 100, &['あ' as u8])?;
+
+    // copy freetype bitmap to xcb (this code is very sketchy lmao)
+    let stride = (glyphinfo.width+3)&!3;
+    // println!("stride {}", stride);
+    let input_bitmap = glyph.bitmap().buffer().to_owned();
+    let mut output_bitmap = vec![0u8; (stride*glyphinfo.height) as usize];
+    for y in 0..glyphinfo.height {
+        output_bitmap[(y*stride) as usize..((y+1)*stride-(stride-glyphinfo.width)) as usize]
+            .copy_from_slice(&input_bitmap[(y*glyphinfo.width) as usize..((y+1)*glyphinfo.width) as usize]);
+    }
+    add_glyphs(conn, gsid, &[glyph_index], &[glyphinfo], &output_bitmap)?;
+
+    // debug_glyph(face.glyph());
+    println!("{:?}", glyphinfo);
+
+    Ok(())
+}
+
+pub fn render_glyph<C: Connection>(
+    conn: &C
+) -> BoxResult<()> {
+
 
     Ok(())
 }
@@ -237,4 +250,3 @@ fn debug_glyph(glyph: &GlyphSlot) {
     }
 
 }
-
