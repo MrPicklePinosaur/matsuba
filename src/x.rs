@@ -74,6 +74,7 @@ pub fn run_x() -> BoxResult<()> {
             Event::Expose(_event) => {
                 let glyph_index = face.get_char_index('あ' as usize);
                 composite_glyphs32(&conn, PictOp::OVER, foreground, pid, format.id, gsid, 100, 100, &[glyph_index as u8])?;
+                conn.flush()?;
             }
             Event::KeyPress(event) => {
                 let keysym = keymap.get(&(event.state,event.detail));
@@ -156,6 +157,7 @@ pub fn create_glyph<C: Connection>(
 
     // debug_glyph(face.glyph());
     println!("{:?}", glyphinfo);
+    println!("{:?}", output_bitmap);
 
     Ok(())
 }

@@ -1,6 +1,6 @@
 
 use std::vec::Vec;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use roxmltree::{Document, ParsingOptions, Node};
 
@@ -8,7 +8,7 @@ use super::db::{Connection, Entry};
 use super::db::insert_entry;
 use super::error::{BoxResult, SimpleError};
 
-pub fn parse_jmdict_xml(conn: &mut Connection, path: &Path) -> BoxResult<()> {
+pub fn parse_jmdict_xml(conn: &mut Connection, path: &Path, tags: &HashSet<&str>) -> BoxResult<()> {
 
     let text = std::fs::read_to_string(path).unwrap();
     let opt = ParsingOptions { allow_dtd: true };
@@ -19,14 +19,14 @@ pub fn parse_jmdict_xml(conn: &mut Connection, path: &Path) -> BoxResult<()> {
 
     let tx = conn.transaction()?;
     for node in root.children().filter(|n| n.is_element()) {
-        parse_entry(&tx, &node)?;
+        parse_entry(&tx, &node, tags)?;
     }
 
     tx.commit()?;
     Ok(())
 }
 
-fn parse_entry(conn: &Connection, entry_node: &Node) -> BoxResult<()> {
+fn parse_entry(conn: &Connection, entry_node: &Node, tags: &HashSet<&str>) -> BoxResult<()> {
 
     let mut entries: HashMap<String, Vec<Entry>> = HashMap::new();
 
@@ -34,6 +34,13 @@ fn parse_entry(conn: &Connection, entry_node: &Node) -> BoxResult<()> {
         // println!("{:?}", elem);
 
         match elem.tag_name().name() {
+
+            "dial"|"field"|"ke_inf"|"misc"|"pos"|"re_inf" => { // check if we are accepting the tag
+                let tag = elem.text().unwrap();
+                if tags.get(tag).is_none() {
+                    continue;
+                }
+            },
             "k_ele" => { // parse kanji element 
 
                 // keb guaranteed to exist
