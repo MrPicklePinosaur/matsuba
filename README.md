@@ -35,9 +35,9 @@ sports, names etc), you can see a full list of 'filters'
 - [x] get keycodes from xmodmap
 - [ ] capture all keypresses (even when not focused)
 - [ ] figure out how to have floating window
-- [ ] fetch kanji data from EDICT
-- [ ] set up database (probably sqlite)
-- [ ] arg parsing
+- [X] fetch kanji data from EDICT
+- [X] set up database (probably sqlite)
+- [X] arg parsing
 
 ## RESOURCES
 

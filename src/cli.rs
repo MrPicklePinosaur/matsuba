@@ -24,18 +24,18 @@ convert <phrase>
 pub fn runcli() -> BoxResult<()> {
 
     let cli = Cli {
-        program_name: "matsuba".to_string(),
-        synopsis: String::new(),
+        program_name: "matsuba",
+        synopsis: "",
         commands: vec![
             Command {
-                desc: "run matsuba daemon".to_string(),
-                command_name: "run".to_string(),
+                desc: "run matsuba daemon",
+                command_name: "run",
                 handler: handle_run,
                 flags: vec![],
             },
             Command {
-                desc: "fetch word lists".to_string(),
-                command_name: "fetch".to_string(),
+                desc: "fetch word lists",
+                command_name: "fetch",
                 handler: handle_fetch,
                 flags: vec![
                     Flag::new('t')
@@ -45,8 +45,8 @@ pub fn runcli() -> BoxResult<()> {
                 ],
             },
             Command {
-                desc: "use the matsuba input converter".to_string(),
-                command_name: "convert".to_string(),
+                desc: "use the matsuba input converter",
+                command_name: "convert",
                 handler: handle_convert,
                 flags: vec![
                     Flag::new('k')
@@ -58,6 +58,19 @@ pub fn runcli() -> BoxResult<()> {
                         .parameter(),
                 ],
             },
+            Command {
+                desc: "query and mutate state of matsuba",
+                command_name: "state",
+                handler: handle_state,
+                flags: vec![
+                    Flag::new('h')
+                        .long("henkan")
+                        .desc("enable conversion"),
+                    Flag::new('H')
+                        .long("muhenkan")
+                        .desc("disable conversion"),
+                ],
+            }
         ],
         global_flags: vec![],
     };
@@ -148,6 +161,11 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
             println!("{}", c.k_ele);
         }
     }
+
+    Ok(())
+}
+
+fn handle_state(flagparse: FlagParse) -> BoxResult<()> {
 
     Ok(())
 }

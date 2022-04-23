@@ -14,15 +14,15 @@ type Commands = Vec<Command>;
 type HandlerFn = fn(flagparse: FlagParse) -> BoxResult<()>;
 
 pub struct Cli {
-    pub program_name: String,
-    pub synopsis: String,
+    pub program_name: &'static str,
+    pub synopsis: &'static str,
     pub commands: Vec<Command>,
     pub global_flags: Vec<Flag>,
 }
 
 pub struct Command {
-    pub desc: String,
-    pub command_name: String,
+    pub desc: &'static str,
+    pub command_name: &'static str,
     pub handler: HandlerFn,
     pub flags: Vec<Flag>,
     // pub args: u8, // TODO could make this take named argument names

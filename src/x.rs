@@ -20,6 +20,8 @@ pub fn run_x() -> BoxResult<()> {
     let (conn, screen_num) = x11rb::connect(None)?;
     let screen = &conn.setup().roots[screen_num];
 
+    println!("{:?}", screen);
+
     // create graphics context
     let foreground = conn.generate_id()?;
     let values_list = CreateGCAux::default()
@@ -33,6 +35,7 @@ pub fn run_x() -> BoxResult<()> {
     conn.map_window(win)?;
     conn.flush()?;
 
+    /*
     // query pictformats
     let pictformats = query_pict_formats(&conn)?.reply()?;
     // TODO hardcoded pictformat for now
@@ -63,6 +66,7 @@ pub fn run_x() -> BoxResult<()> {
     let gsid = conn.generate_id()?;
     create_glyph_set(&conn, gsid, format.id)?;
     create_glyph(&conn, &face, gsid, 'あ')?;
+    */
 
     // TODO free stuff
 
@@ -72,8 +76,8 @@ pub fn run_x() -> BoxResult<()> {
         let event = conn.wait_for_event()?;
         match event {
             Event::Expose(_event) => {
-                let glyph_index = face.get_char_index('あ' as usize);
-                composite_glyphs32(&conn, PictOp::OVER, foreground, pid, format.id, gsid, 100, 100, &[glyph_index as u8])?;
+                // let glyph_index = face.get_char_index('あ' as usize);
+                // composite_glyphs32(&conn, PictOp::OVER, foreground, pid, format.id, gsid, 100, 100, &[glyph_index as u8])?;
                 conn.flush()?;
             }
             Event::KeyPress(event) => {
