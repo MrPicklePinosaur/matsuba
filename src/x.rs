@@ -5,6 +5,7 @@ use x11rb::errors::ReplyOrIdError;
 use x11rb::COPY_DEPTH_FROM_PARENT;
 use x11rb::protocol::render::*;
 use x11rb::protocol::Event;
+use x11rb::CURRENT_TIME;
 use fontconfig::Fontconfig;
 use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
@@ -20,8 +21,13 @@ pub fn run_x() -> BoxResult<()> {
     let (conn, screen_num) = x11rb::connect(None)?;
     let screen = &conn.setup().roots[screen_num];
 
-    println!("{:?}", screen);
+    let values_list = ChangeWindowAttributesAux::default()
+        .event_mask(EventMask::EXPOSURE|EventMask::BUTTON_PRESS);
+    conn.change_window_attributes(screen.root, &values_list)?;
 
+    grab_keyboard(&conn, true, screen.root, CURRENT_TIME, GrabMode::ASYNC, GrabMode::ASYNC)?;
+
+    /*
     // create graphics context
     let foreground = conn.generate_id()?;
     let values_list = CreateGCAux::default()
@@ -35,7 +41,6 @@ pub fn run_x() -> BoxResult<()> {
     conn.map_window(win)?;
     conn.flush()?;
 
-    /*
     // query pictformats
     let pictformats = query_pict_formats(&conn)?.reply()?;
     // TODO hardcoded pictformat for now
@@ -96,7 +101,7 @@ pub fn run_x() -> BoxResult<()> {
         }
     }
 
-    drop(conn);
+    drop(&conn);
     Ok(())
 }
 
