@@ -183,6 +183,7 @@ dependencies = [
  "roxmltree",
  "rusqlite",
  "x11rb",
+ "xmodmap",
 ]
 
 [[package]]
@@ -321,6 +322,10 @@ name = "xmlparser"
 version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "114ba2b24d2167ef6d67d7d04c8cc86522b87f490025f39f0303b7db5bf5e3d8"
+
+[[package]]
+name = "xmodmap"
+version = "0.1.0"
 
 [[package]]
 name = "yeslogic-fontconfig-sys"

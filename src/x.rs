@@ -10,12 +10,12 @@ use fontconfig::Fontconfig;
 use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
 
+use xmodmap;
 use super::error::BoxResult;
-use super::keycode;
 
 pub fn run_x() -> BoxResult<()> {
 
-    let keymap = keycode::load_xmodmap()?;
+    let keymap = xmodmap::load_xmodmap()?;
 
     // x11rb init
     let (conn, screen_num) = x11rb::connect(None)?;
