@@ -4,12 +4,19 @@ use std::collections::HashMap;
 use std::fmt;
 pub use std::str::FromStr;
 
-pub type KeyCode = (u16,u8);
-pub type KeyTable = HashMap<KeyCode, KeySym>;
+pub type KeyState = u16;
+pub type KeyDetail = u8;
+pub type KeyCode = (KeyState,KeyDetail);
+
+pub struct KeyTable {
+    table: HashMap<KeyCode, KeySym>,
+}
 
 #[derive(Debug)]
 pub enum Error {
-    InvalidFormat
+    XmodmapRunError,
+    InvalidFormat,
+    NonExistentKeyCode,
 }
 
 impl std::error::Error for Error { }
@@ -17,14 +24,57 @@ impl fmt::Display for Error {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::InvalidFormat => write!(f, "{}", "invalid format"),
+            Error::XmodmapRunError => write!(f, "{}", "could not run xmodmap command, do you have it installed?"),
+            Error::InvalidFormat => write!(f, "{}", "invalid xmodmap format"),
+            Error::NonExistentKeyCode => write!(f, "{}", "non-existent keycode"),
         }
     }
 
 }
 
+impl KeyTable {
+
+    // requires that user has xmodmap program installed
+    pub fn new() -> Result<Self, Error> {
+        
+        let mut table = HashMap::new();
+
+        let output = Command::new("xmodmap").arg("-pke")
+            .output()
+            .or(Err(Error::XmodmapRunError))?;
+        let raw_xmodmap = String::from_utf8(output.stdout)
+            .or(Err(Error::XmodmapRunError))?;
+
+        for l in raw_xmodmap.lines() {
+            let mut split = l.split_ascii_whitespace();
+
+            assert_eq!(Some("keycode"), split.next());
+            let keycode = split
+                .next().ok_or(Error::InvalidFormat)?
+                .parse::<u8>().or(Err(Error::InvalidFormat))?;
+            assert_eq!(Some("="), split.next());
+
+            // TODO handle case where next() fails in a better way
+            let a = KeySym::from_str(split.next().unwrap_or("")).unwrap_or(KeySym::KEY_NONE);
+            let b = KeySym::from_str(split.next().unwrap_or("")).unwrap_or(KeySym::KEY_NONE);
+            table.insert((0,keycode), a);
+            table.insert((1,keycode), b);
+        }
+
+        Ok(KeyTable{ table: table })
+    }
+
+    pub fn get_keysym(&self, state: KeyState, detail: KeyDetail) -> Result<KeySym, Error> {
+        match self.table.get(&(state,detail)) {
+            Some(k) => Ok(k.clone()),
+            None => Err(Error::NonExistentKeyCode),
+        }
+    }
+}
+
+
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum KeySym {
     KEY_NONE,
     KEY_a,
@@ -204,32 +254,5 @@ impl KeySym {
             } as u32)
         )
     }
-}
-
-// requires that user has xmodmap program installed
-pub fn load_xmodmap() -> Result<KeyTable, Box<dyn std::error::Error>> {
-    
-    let mut keytable = HashMap::new();
-
-    let output = Command::new("xmodmap").arg("-pke").output()?;
-    let raw_xmodmap = String::from_utf8(output.stdout)?;
-
-    for l in raw_xmodmap.lines() {
-        let mut split = l.split_ascii_whitespace();
-
-        assert_eq!(Some("keycode"), split.next());
-        let keycode = split
-            .next().ok_or(Error::InvalidFormat)?
-            .parse::<u8>()?;
-        assert_eq!(Some("="), split.next());
-
-        // TODO handle case where next() fails in a better way
-        let a = KeySym::from_str(split.next().unwrap_or("")).unwrap_or(KeySym::KEY_NONE);
-        let b = KeySym::from_str(split.next().unwrap_or("")).unwrap_or(KeySym::KEY_NONE);
-        keytable.insert((0,keycode), a);
-        keytable.insert((1,keycode), b);
-    }
-
-    Ok(keytable)
 }
 

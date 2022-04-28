@@ -10,12 +10,12 @@ use fontconfig::Fontconfig;
 use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
 
-use xmodmap;
+use xmodmap::KeyTable;
 use super::error::BoxResult;
 
 pub fn run_x() -> BoxResult<()> {
 
-    let keymap = xmodmap::load_xmodmap()?;
+    let keytable = KeyTable::new()?;
 
     // x11rb init
     let (conn, screen_num) = x11rb::connect(None)?;
@@ -86,8 +86,8 @@ pub fn run_x() -> BoxResult<()> {
                 conn.flush()?;
             }
             Event::KeyPress(event) => {
-                let keysym = keymap.get(&(event.state,event.detail));
-                if keysym.is_none() { break; }
+                let keysym = keytable.get_keysym(event.state,event.detail);
+                if keysym.is_err() { break; }
                 let keysym = keysym.unwrap();
 
                 println!("keypress {}", keysym.as_char().unwrap());
