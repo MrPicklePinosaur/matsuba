@@ -4,12 +4,22 @@ use std::collections::HashMap;
 use std::fmt;
 pub use std::str::FromStr;
 
-pub type KeyState = u16;
-pub type KeyDetail = u8;
-pub type KeyCode = (KeyState,KeyDetail);
+#[derive(std::cmp::PartialEq, std::cmp::Eq, std::hash::Hash)]
+pub enum Modifier {
+    Key,
+    ShiftKey,
+    ModeSwitchKey,
+    ModeSwitchShiftKey,
+    ISOLevel3ShiftKey,
+    ISOLevel3ShiftShiftKey
+}
+
+pub type KeyCode = u8;
+pub type Key = (Modifier,KeyCode);
 
 pub struct KeyTable {
-    table: HashMap<KeyCode, KeySym>,
+    key_to_keysym: HashMap<Key,KeySym>,
+    keysym_to_keycode: HashMap<KeySym,KeyCode>,
 }
 
 #[derive(Debug)]
@@ -17,6 +27,7 @@ pub enum Error {
     XmodmapRunError,
     InvalidFormat,
     NonExistentKeyCode,
+    NonExistentKeySym,
 }
 
 impl std::error::Error for Error { }
@@ -27,6 +38,7 @@ impl fmt::Display for Error {
             Error::XmodmapRunError => write!(f, "{}", "could not run xmodmap command, do you have it installed?"),
             Error::InvalidFormat => write!(f, "{}", "invalid xmodmap format"),
             Error::NonExistentKeyCode => write!(f, "{}", "non-existent keycode"),
+            Error::NonExistentKeySym => write!(f, "{}", "non-existent keysym"),
         }
     }
 
@@ -37,7 +49,8 @@ impl KeyTable {
     // requires that user has xmodmap program installed
     pub fn new() -> Result<Self, Error> {
         
-        let mut table = HashMap::new();
+        let mut key_to_keysym: HashMap<Key,KeySym> = HashMap::new();
+        let mut keysym_to_keycode: HashMap<KeySym,KeyCode> = HashMap::new();
 
         let output = Command::new("xmodmap").arg("-pke")
             .output()
@@ -57,24 +70,36 @@ impl KeyTable {
             // TODO handle case where next() fails in a better way
             let a = KeySym::from_str(split.next().unwrap_or("")).unwrap_or(KeySym::KEY_NONE);
             let b = KeySym::from_str(split.next().unwrap_or("")).unwrap_or(KeySym::KEY_NONE);
-            table.insert((0,keycode), a);
-            table.insert((1,keycode), b);
+            key_to_keysym.insert((Modifier::Key,keycode), a.clone());
+            keysym_to_keycode.insert(a, keycode);
+            key_to_keysym.insert((Modifier::ShiftKey,keycode), b.clone());
+            keysym_to_keycode.insert(b, keycode);
         }
 
-        Ok(KeyTable{ table: table })
+        Ok(KeyTable{
+            key_to_keysym: key_to_keysym,
+            keysym_to_keycode: keysym_to_keycode,
+        })
     }
 
-    pub fn get_keysym(&self, state: KeyState, detail: KeyDetail) -> Result<KeySym, Error> {
-        match self.table.get(&(state,detail)) {
+    pub fn get_keysym(&self, modifier: Modifier, code: KeyCode) -> Result<KeySym, Error> {
+        match self.key_to_keysym.get(&(modifier,code)) {
             Some(k) => Ok(k.clone()),
             None => Err(Error::NonExistentKeyCode),
+        }
+    }
+
+    pub fn get_keycode(&self, keysym: KeySym) -> Result<KeyCode, Error> {
+        match self.keysym_to_keycode.get(&keysym) {
+            Some(k) => Ok(k.clone()),
+            None => Err(Error::NonExistentKeySym),
         }
     }
 }
 
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum KeySym {
     KEY_NONE,
     KEY_a,

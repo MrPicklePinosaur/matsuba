@@ -10,7 +10,7 @@ use fontconfig::Fontconfig;
 use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
 
-use xmodmap::KeyTable;
+use xmodmap::{KeyTable, Modifier};
 use super::error::BoxResult;
 
 pub fn run_x() -> BoxResult<()> {
@@ -86,7 +86,8 @@ pub fn run_x() -> BoxResult<()> {
                 conn.flush()?;
             }
             Event::KeyPress(event) => {
-                let keysym = keytable.get_keysym(event.state,event.detail);
+                let modifier = if event.state & u16::from(KeyButMask::SHIFT) == 0 { Modifier::Key } else { Modifier::ShiftKey };
+                let keysym = keytable.get_keysym(modifier,event.detail);
                 if keysym.is_err() { break; }
                 let keysym = keysym.unwrap();
 
