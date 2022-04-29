@@ -18,16 +18,24 @@ pub struct XSession<'a, C: Connection> {
     conn: &'a C,
     screen: &'a Screen,
     completion_box: Option<Window>,
+    completion_gc: Gcontext,
 }
 
 impl<'a, C: Connection> XSession<'a, C> {
 
     pub fn new(conn: &'a C, screen: &'a Screen) -> BoxResult<XSession<'a, C>> {
 
+        let completion_gc = conn.generate_id()?;
+        let values_list = CreateGCAux::new()
+            .foreground(screen.white_pixel)
+            .background(screen.black_pixel);
+        conn.create_gc(completion_gc, screen.root, &values_list)?;
+
         Ok(XSession {
             conn: conn,
             screen: screen,
             completion_box: None,
+            completion_gc: completion_gc,
         })
 
     }
@@ -44,10 +52,15 @@ impl<'a, C: Connection> XSession<'a, C> {
 
     pub fn handle_event(&self, event: &Event) -> BoxResult<()> {
 
-        todo!()
+        match event {
+            
+            _ => {}
+        };
+
+        Ok(())
     }
 
-    fn create_completion_box(&mut self, position: (i16, i16), text: &str) -> BoxResult<()> {
+    pub fn create_completion_box(&mut self, position: (i16, i16), text: &str) -> BoxResult<()> {
 
         // TODO temp
         const TEXT_WIDTH: u16 = 5;
@@ -55,9 +68,10 @@ impl<'a, C: Connection> XSession<'a, C> {
         // create completion box window
         let win = self.conn.generate_id()?;
         let values_list = CreateWindowAux::default()
-            .background_pixel(self.screen.white_pixel);
+            .background_pixel(self.screen.white_pixel)
+            .override_redirect(1); // make window manager ignore the window
         self.conn.create_window(
-            COPY_DEPTH_FROM_PARENT,
+            0, // draw on top of everything
             win,
             self.screen.root,
             position.0,
@@ -75,13 +89,16 @@ impl<'a, C: Connection> XSession<'a, C> {
         Ok(())
     }
 
-    fn render_completion_box(&self) -> BoxResult<()> {
+    // pub fn render_completion_box(&self, position: (i16, i16), text: &str) -> BoxResult<()> {
+    pub fn render_completion_box(&self) -> BoxResult<()> {
 
-        todo!()
+        if self.completion_box.is_none() { return Ok(()); }
+        self.conn.map_window(self.completion_box.unwrap())?;
+
+        Ok(())
     }
 
     fn destroy_completion_box(&mut self) -> BoxResult<()> {
-
         if self.completion_box.is_none() { return Ok(()); }
         self.conn.destroy_window(self.completion_box.unwrap())?;
         Ok(())
