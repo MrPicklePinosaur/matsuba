@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fmt;
 pub use std::str::FromStr;
 
-#[derive(std::cmp::PartialEq, std::cmp::Eq, std::hash::Hash)]
+#[derive(std::cmp::PartialEq, std::cmp::Eq, std::hash::Hash, Clone)]
 pub enum Modifier {
     Key,
     ShiftKey,
@@ -19,7 +19,7 @@ pub type Key = (Modifier,KeyCode);
 
 pub struct KeyTable {
     key_to_keysym: HashMap<Key,KeySym>,
-    keysym_to_keycode: HashMap<KeySym,KeyCode>,
+    keysym_to_key: HashMap<KeySym,Key>,
 }
 
 #[derive(Debug)]
@@ -50,7 +50,7 @@ impl KeyTable {
     pub fn new() -> Result<Self, Error> {
         
         let mut key_to_keysym: HashMap<Key,KeySym> = HashMap::new();
-        let mut keysym_to_keycode: HashMap<KeySym,KeyCode> = HashMap::new();
+        let mut keysym_to_key: HashMap<KeySym,Key> = HashMap::new();
 
         let output = Command::new("xmodmap").arg("-pke")
             .output()
@@ -71,14 +71,14 @@ impl KeyTable {
             let a = KeySym::from_str(split.next().unwrap_or("")).unwrap_or(KeySym::KEY_NONE);
             let b = KeySym::from_str(split.next().unwrap_or("")).unwrap_or(KeySym::KEY_NONE);
             key_to_keysym.insert((Modifier::Key,keycode), a.clone());
-            keysym_to_keycode.insert(a, keycode);
+            keysym_to_key.insert(a, (Modifier::Key,keycode));
             key_to_keysym.insert((Modifier::ShiftKey,keycode), b.clone());
-            keysym_to_keycode.insert(b, keycode);
+            keysym_to_key.insert(b, (Modifier::Key,keycode));
         }
 
         Ok(KeyTable{
             key_to_keysym: key_to_keysym,
-            keysym_to_keycode: keysym_to_keycode,
+            keysym_to_key: keysym_to_key,
         })
     }
 
@@ -89,8 +89,8 @@ impl KeyTable {
         }
     }
 
-    pub fn get_keycode(&self, keysym: KeySym) -> Result<KeyCode, Error> {
-        match self.keysym_to_keycode.get(&keysym) {
+    pub fn get_key(&self, keysym: KeySym) -> Result<Key, Error> {
+        match self.keysym_to_key.get(&keysym) {
             Some(k) => Ok(k.clone()),
             None => Err(Error::NonExistentKeySym),
         }
