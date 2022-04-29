@@ -12,7 +12,83 @@ use freetype::face::LoadFlag;
 
 use xmodmap::{KeyTable, Modifier};
 use super::error::BoxResult;
+use super::config;
 
+pub struct XSession<'a, C: Connection> {
+    conn: &'a C,
+    screen: &'a Screen,
+    completion_box: Option<Window>,
+}
+
+impl<'a, C: Connection> XSession<'a, C> {
+
+    pub fn new(conn: &'a C, screen: &'a Screen) -> BoxResult<XSession<'a, C>> {
+
+        Ok(XSession {
+            conn: conn,
+            screen: screen,
+            completion_box: None,
+        })
+
+    }
+
+    pub fn configure_root(&self) -> BoxResult<()> {
+
+        let attrs = self.conn.get_window_attributes(self.screen.root)?.reply()?;
+        let values_list = ChangeWindowAttributesAux::default()
+            .event_mask(attrs.your_event_mask|EventMask::SUBSTRUCTURE_NOTIFY); // TODO this might need to be attrs.all_event_masks
+        change_window_attributes(self.conn, self.screen.root, &values_list)?.check()?;
+
+        Ok(())
+    }
+
+    pub fn handle_event(&self, event: &Event) -> BoxResult<()> {
+
+        todo!()
+    }
+
+    fn create_completion_box(&mut self, position: (i16, i16), text: &str) -> BoxResult<()> {
+
+        // TODO temp
+        const TEXT_WIDTH: u16 = 5;
+
+        // create completion box window
+        let win = self.conn.generate_id()?;
+        let values_list = CreateWindowAux::default()
+            .background_pixel(self.screen.white_pixel);
+        self.conn.create_window(
+            COPY_DEPTH_FROM_PARENT,
+            win,
+            self.screen.root,
+            position.0,
+            position.1,
+            text.len() as u16 * TEXT_WIDTH,
+            config::COMPLETION_BOX_HEIGHT,
+            0,
+            WindowClass::INPUT_OUTPUT,
+            self.screen.root_visual,
+            &values_list,
+        )?;
+
+        self.completion_box = Some(win);
+
+        Ok(())
+    }
+
+    fn render_completion_box(&self) -> BoxResult<()> {
+
+        todo!()
+    }
+
+    fn destroy_completion_box(&mut self) -> BoxResult<()> {
+
+        if self.completion_box.is_none() { return Ok(()); }
+        self.conn.destroy_window(self.completion_box.unwrap())?;
+        Ok(())
+    }
+
+}
+/*
 pub fn run_x() -> BoxResult<()> {
 
     let keytable = KeyTable::new()?;
@@ -105,6 +181,7 @@ pub fn run_x() -> BoxResult<()> {
     drop(&conn);
     Ok(())
 }
+*/
 
 pub fn create_win<C: Connection>(
     conn: &C,
