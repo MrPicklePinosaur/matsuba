@@ -97,6 +97,8 @@ impl KeyTable {
     }
 }
 
+pub static ALL_LOWER_CASE: &'static [KeySym] = &[KeySym::KEY_a,KeySym::KEY_b,KeySym::KEY_c,KeySym::KEY_d,KeySym::KEY_e,KeySym::KEY_f,KeySym::KEY_g,KeySym::KEY_h,KeySym::KEY_i,KeySym::KEY_j,KeySym::KEY_k,KeySym::KEY_l,KeySym::KEY_m,KeySym::KEY_n,KeySym::KEY_o,KeySym::KEY_p,KeySym::KEY_q,KeySym::KEY_r,KeySym::KEY_s,KeySym::KEY_t,KeySym::KEY_u,KeySym::KEY_v,KeySym::KEY_w,KeySym::KEY_x,KeySym::KEY_y,KeySym::KEY_z];
+pub static ALL_UPPER_CASE: &'static [KeySym] = &[KeySym::KEY_A,KeySym::KEY_B,KeySym::KEY_C,KeySym::KEY_D,KeySym::KEY_E,KeySym::KEY_F,KeySym::KEY_G,KeySym::KEY_H,KeySym::KEY_I,KeySym::KEY_J,KeySym::KEY_K,KeySym::KEY_L,KeySym::KEY_M,KeySym::KEY_N,KeySym::KEY_O,KeySym::KEY_P,KeySym::KEY_Q,KeySym::KEY_R,KeySym::KEY_S,KeySym::KEY_T,KeySym::KEY_U,KeySym::KEY_V,KeySym::KEY_W,KeySym::KEY_X,KeySym::KEY_Y,KeySym::KEY_Z];
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
@@ -154,6 +156,9 @@ pub enum KeySym {
     KEY_X,
     KEY_Y,
     KEY_Z,
+    KEY_SPACE,
+    KEY_RETURN,
+    KEY_BACKSPACE,
 }
 
 impl FromStr for KeySym {
@@ -214,6 +219,10 @@ impl FromStr for KeySym {
             "X" => Ok(KeySym::KEY_X),
             "Y" => Ok(KeySym::KEY_Y),
             "Z" => Ok(KeySym::KEY_Z),
+            "space" => Ok(KeySym::KEY_SPACE),
+            "Return" => Ok(KeySym::KEY_RETURN),
+            "BackSpace" => Ok(KeySym::KEY_BACKSPACE),
+            "NoSymbol" => Ok(KeySym::KEY_NONE),
             _ => Err(()),
         }
     }

@@ -17,7 +17,7 @@ fn main() -> BoxResult<()> {
     session.configure_root()?;
     session.create_completion_box((100, 100), "testingtestingtesting")?;
 
-    loop {
+    while session.is_running() {
         session.render_completion_box()?;
         conn.flush()?;
 

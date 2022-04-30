@@ -5,13 +5,13 @@ use x11rb::errors::ReplyOrIdError;
 use x11rb::COPY_DEPTH_FROM_PARENT;
 use x11rb::protocol::render::*;
 use x11rb::protocol::Event;
-use x11rb::CURRENT_TIME;
+use x11rb::{CURRENT_TIME};
 use fontconfig::Fontconfig;
 use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
 
-use xmodmap::{KeyTable, Modifier};
-use super::error::BoxResult;
+use xmodmap::{KeyTable, Modifier, KeySym};
+use super::error::{BoxResult, SimpleError};
 use super::config;
 
 pub struct XSession<'a, C: Connection> {
@@ -19,6 +19,8 @@ pub struct XSession<'a, C: Connection> {
     screen: &'a Screen,
     completion_box: Option<Window>,
     completion_gc: Gcontext,
+    keytable: KeyTable,
+    running: bool,
 }
 
 impl<'a, C: Connection> XSession<'a, C> {
@@ -31,11 +33,15 @@ impl<'a, C: Connection> XSession<'a, C> {
             .background(screen.black_pixel);
         conn.create_gc(completion_gc, screen.root, &values_list)?;
 
+        let keytable = KeyTable::new()?;
+
         Ok(XSession {
             conn: conn,
             screen: screen,
             completion_box: None,
             completion_gc: completion_gc,
+            keytable: keytable,
+            running: true,
         })
 
     }
@@ -45,15 +51,44 @@ impl<'a, C: Connection> XSession<'a, C> {
         let attrs = self.conn.get_window_attributes(self.screen.root)?.reply()?;
         let values_list = ChangeWindowAttributesAux::default()
             .event_mask(attrs.your_event_mask|EventMask::SUBSTRUCTURE_NOTIFY); // TODO this might need to be attrs.all_event_masks
-        change_window_attributes(self.conn, self.screen.root, &values_list)?.check()?;
+        self.conn.change_window_attributes(self.screen.root, &values_list)?.check()?;
+
+        // grab user keypresses
+        // strategy 1 (grab keyboard)
+        let grab_status = self.conn.grab_keyboard(false, self.screen.root, CURRENT_TIME, GrabMode::ASYNC, GrabMode::ASYNC)?.reply()?;
+        if grab_status.status != GrabStatus::SUCCESS {
+            return Err(Box::new(SimpleError::new("error grabbing keyboard")));
+        }
+
+        /*
+        // strategy 2 (grab all keys)
+        const MOD_MASK_ANY: u16 = 0x0;
+        const GRAB_ANY: u8 = 0x00;
+        self.conn.grab_key(false, self.screen.root, MOD_MASK_ANY, GRAB_ANY, GrabMode::ASYNC, GrabMode::ASYNC)?.check()?;
+        */
 
         Ok(())
     }
 
-    pub fn handle_event(&self, event: &Event) -> BoxResult<()> {
+    pub fn handle_event(&mut self, event: &Event) -> BoxResult<()> {
 
         match event {
-            
+            Event::KeyPress(event) => {
+                println!("{:?} {:}", event.state, event.detail);
+
+                let modifier = if event.state & u16::from(KeyButMask::SHIFT) == 0 { Modifier::Key } else { Modifier::ShiftKey };
+                let keysym = self.keytable.get_keysym(modifier, event.detail);
+                if keysym.is_err() { return Ok(()); }
+                let keysym = keysym.unwrap();
+
+                match keysym {
+                    KeySym::KEY_RETURN => {
+                        self.running = false;
+                    }
+                    _ => {}
+                }
+
+            }
             _ => {}
         };
 
@@ -102,6 +137,10 @@ impl<'a, C: Connection> XSession<'a, C> {
         if self.completion_box.is_none() { return Ok(()); }
         self.conn.destroy_window(self.completion_box.unwrap())?;
         Ok(())
+    }
+
+    pub fn is_running(&self) -> bool {
+        return self.running;
     }
 
 }
