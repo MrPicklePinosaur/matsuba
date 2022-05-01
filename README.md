@@ -33,11 +33,15 @@ sports, names etc), you can see a full list of 'filters'
 ## TODO
 
 - [x] get keycodes from xmodmap
-- [ ] capture all keypresses (even when not focused)
-- [ ] figure out how to have floating window
+- [x] capture all keypresses (even when not focused)
+- [x] figure out how to have floating window
 - [X] fetch kanji data from EDICT
 - [X] set up database (probably sqlite)
 - [X] arg parsing
+- [ ] glyph rendering
+- [ ] make user type accepted string
+- [ ] henkan + muhenkan
+- [ ] conversion menu for kanji
 
 ## RESOURCES
 

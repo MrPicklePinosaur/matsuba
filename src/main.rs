@@ -13,7 +13,8 @@ fn main() -> BoxResult<()> {
     let (conn, screen_num) = x11rb::connect(None)?;
     let screen = &conn.setup().roots[screen_num];
 
-    let mut session = XSession::new(&conn, screen)?;
+    let dfa = converter::build_dfa();
+    let mut session = XSession::new(&conn, screen, &dfa)?;
     session.configure_root()?;
     session.create_completion_box((100, 100), "testingtestingtesting")?;
 

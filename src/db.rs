@@ -1,6 +1,8 @@
 
 use rusqlite::{Result, ToSql, params};
-pub use rusqlite::Connection;
+use rusqlite::Connection;
+
+pub type DBConnection = Connection;
 
 #[derive(Debug)]
 pub struct Entry {

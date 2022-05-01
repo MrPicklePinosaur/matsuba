@@ -47,7 +47,8 @@ impl<'a> Converter<'a> {
     }
 
     pub fn del_char(&mut self) {
-
+        self.output.pop();
+        self.cur_state = self.start_state;
     }
 
     pub fn accept(&mut self) -> String {

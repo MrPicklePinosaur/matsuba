@@ -159,6 +159,7 @@ pub enum KeySym {
     KEY_SPACE,
     KEY_RETURN,
     KEY_BACKSPACE,
+    KEY_TAB,
 }
 
 impl FromStr for KeySym {
@@ -222,6 +223,7 @@ impl FromStr for KeySym {
             "space" => Ok(KeySym::KEY_SPACE),
             "Return" => Ok(KeySym::KEY_RETURN),
             "BackSpace" => Ok(KeySym::KEY_BACKSPACE),
+            "Tab" => Ok(KeySym::KEY_TAB),
             "NoSymbol" => Ok(KeySym::KEY_NONE),
             _ => Err(()),
         }

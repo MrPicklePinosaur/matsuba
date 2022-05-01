@@ -1,17 +1,23 @@
 
-use x11rb::connection::Connection;
-use x11rb::protocol::xproto::*;
-use x11rb::errors::ReplyOrIdError;
-use x11rb::COPY_DEPTH_FROM_PARENT;
-use x11rb::protocol::render::*;
-use x11rb::protocol::Event;
-use x11rb::{CURRENT_TIME};
+use x11rb::{
+    COPY_DEPTH_FROM_PARENT, CURRENT_TIME,
+    connection::Connection,
+    protocol::{
+        Event,
+        xproto::*,
+        render::*,
+    },
+    errors::ReplyOrIdError,
+};
 use fontconfig::Fontconfig;
 use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
-
 use xmodmap::{KeyTable, Modifier, KeySym};
+
 use super::error::{BoxResult, SimpleError};
+use super::converter::{State, Converter};
+use super::db;
+use super::db::DBConnection;
 use super::config;
 
 pub struct XSession<'a, C: Connection> {
@@ -20,12 +26,14 @@ pub struct XSession<'a, C: Connection> {
     completion_box: Option<Window>,
     completion_gc: Gcontext,
     keytable: KeyTable,
+    converter: Converter<'a>,
+    db_conn: DBConnection,
     running: bool,
 }
 
 impl<'a, C: Connection> XSession<'a, C> {
 
-    pub fn new(conn: &'a C, screen: &'a Screen) -> BoxResult<XSession<'a, C>> {
+    pub fn new(conn: &'a C, screen: &'a Screen, dfa: &'a State) -> BoxResult<XSession<'a, C>> {
 
         let completion_gc = conn.generate_id()?;
         let values_list = CreateGCAux::new()
@@ -34,6 +42,8 @@ impl<'a, C: Connection> XSession<'a, C> {
         conn.create_gc(completion_gc, screen.root, &values_list)?;
 
         let keytable = KeyTable::new()?;
+        let converter = Converter::new(&dfa);
+        let db_conn = db::get_connection()?;
 
         Ok(XSession {
             conn: conn,
@@ -41,6 +51,8 @@ impl<'a, C: Connection> XSession<'a, C> {
             completion_box: None,
             completion_gc: completion_gc,
             keytable: keytable,
+            converter: converter,
+            db_conn: db_conn,
             running: true,
         })
 
@@ -48,24 +60,17 @@ impl<'a, C: Connection> XSession<'a, C> {
 
     pub fn configure_root(&self) -> BoxResult<()> {
 
+        // append to root window attributes
         let attrs = self.conn.get_window_attributes(self.screen.root)?.reply()?;
         let values_list = ChangeWindowAttributesAux::default()
             .event_mask(attrs.your_event_mask|EventMask::SUBSTRUCTURE_NOTIFY); // TODO this might need to be attrs.all_event_masks
         self.conn.change_window_attributes(self.screen.root, &values_list)?.check()?;
 
         // grab user keypresses
-        // strategy 1 (grab keyboard)
         let grab_status = self.conn.grab_keyboard(false, self.screen.root, CURRENT_TIME, GrabMode::ASYNC, GrabMode::ASYNC)?.reply()?;
         if grab_status.status != GrabStatus::SUCCESS {
             return Err(Box::new(SimpleError::new("error grabbing keyboard")));
         }
-
-        /*
-        // strategy 2 (grab all keys)
-        const MOD_MASK_ANY: u16 = 0x0;
-        const GRAB_ANY: u8 = 0x00;
-        self.conn.grab_key(false, self.screen.root, MOD_MASK_ANY, GRAB_ANY, GrabMode::ASYNC, GrabMode::ASYNC)?.check()?;
-        */
 
         Ok(())
     }
@@ -74,23 +79,60 @@ impl<'a, C: Connection> XSession<'a, C> {
 
         match event {
             Event::KeyPress(event) => {
-                println!("{:?} {:}", event.state, event.detail);
-
-                let modifier = if event.state & u16::from(KeyButMask::SHIFT) == 0 { Modifier::Key } else { Modifier::ShiftKey };
-                let keysym = self.keytable.get_keysym(modifier, event.detail);
-                if keysym.is_err() { return Ok(()); }
-                let keysym = keysym.unwrap();
-
-                match keysym {
-                    KeySym::KEY_RETURN => {
-                        self.running = false;
-                    }
-                    _ => {}
-                }
-
+                self.handle_keypress(event)?;
             }
             _ => {}
         };
+
+        Ok(())
+    }
+
+    fn handle_keypress(&mut self, event: &KeyPressEvent) -> BoxResult<()> {
+
+        let modifier = if event.state & u16::from(KeyButMask::SHIFT) == 0 { Modifier::Key } else { Modifier::ShiftKey };
+        let keysym = self.keytable.get_keysym(modifier, event.detail);
+        if keysym.is_err() { return Ok(()); }
+        let keysym = keysym.unwrap();
+
+        match keysym {
+            KeySym::KEY_RETURN => {
+                let output = self.converter.accept();
+
+                /*
+                // find currently focused window
+                let focused_win = self.conn.get_input_focus()?.reply()?.focus;
+                let keypress_event = KeyPressEvent {
+                    // response_type:,
+                    // detail:
+                    
+                }
+                self.conn.send_event(false, focused_win, EventMask::KeyPress, )?;
+                */
+
+                self.running = false;
+            }
+            KeySym::KEY_BACKSPACE => {
+                self.converter.del_char();
+                println!("{}", self.converter.output);
+            }
+            KeySym::KEY_TAB => {
+                let output = self.converter.accept();
+
+                let converted = db::search(&self.db_conn, &output)?;
+
+                if converted.len() == 0 {
+                    println!("{}", output);
+                } else {
+                    println!("{}", converted.get(0).unwrap().k_ele);
+                }
+            }
+            _ => {
+                let ch = keysym.as_char();
+                if ch.is_none() { return Ok(()); }
+                self.converter.input_char(ch.unwrap());
+                println!("{}", self.converter.output);
+            }
+        }
 
         Ok(())
     }
@@ -144,100 +186,6 @@ impl<'a, C: Connection> XSession<'a, C> {
     }
 
 }
-/*
-pub fn run_x() -> BoxResult<()> {
-
-    let keytable = KeyTable::new()?;
-
-    // x11rb init
-    let (conn, screen_num) = x11rb::connect(None)?;
-    let screen = &conn.setup().roots[screen_num];
-
-    let values_list = ChangeWindowAttributesAux::default()
-        .event_mask(EventMask::EXPOSURE|EventMask::BUTTON_PRESS);
-    conn.change_window_attributes(screen.root, &values_list)?;
-
-    grab_keyboard(&conn, true, screen.root, CURRENT_TIME, GrabMode::ASYNC, GrabMode::ASYNC)?;
-
-    /*
-    // create graphics context
-    let foreground = conn.generate_id()?;
-    let values_list = CreateGCAux::default()
-        .foreground(screen.black_pixel)
-        .graphics_exposures(0);
-    conn.create_gc(foreground, screen.root, &values_list)?;
-
-    // create window
-    let win = create_win(&conn, screen)?;
-
-    conn.map_window(win)?;
-    conn.flush()?;
-
-    // query pictformats
-    let pictformats = query_pict_formats(&conn)?.reply()?;
-    // TODO hardcoded pictformat for now
-    let format = pictformats.formats.iter().find(|f| f.id == 41).unwrap();
-    // for pf in pictformats.formats {
-    //     println!("{:?}", pf);
-    // }
-
-    // create picture
-    let pid = conn.generate_id()?;
-    let values_list = CreatePictureAux::default()
-        .polymode(PolyMode::IMPRECISE)
-        .polyedge(PolyEdge::SMOOTH);
-    create_picture(&conn, pid, win, format.id, &values_list)?;
-
-    // init font stuff
-    let fc = Fontconfig::new().unwrap();
-    let font = fc.find("sans", None).unwrap();
-
-    println!("{}: {}", font.name, font.path.display());
-
-    // freetype init
-    let lib = Library::init()?;
-    let face = lib.new_face(font.path.as_os_str(), 0)?;
-    face.set_char_size(40*64, 0, 50, 0)?;
-
-    // xcb glyph init
-    let gsid = conn.generate_id()?;
-    create_glyph_set(&conn, gsid, format.id)?;
-    create_glyph(&conn, &face, gsid, 'あ')?;
-    */
-
-    // TODO free stuff
-
-    // main loop
-    let mut running = true;
-    while running {
-        let event = conn.wait_for_event()?;
-        match event {
-            Event::Expose(_event) => {
-                // let glyph_index = face.get_char_index('あ' as usize);
-                // composite_glyphs32(&conn, PictOp::OVER, foreground, pid, format.id, gsid, 100, 100, &[glyph_index as u8])?;
-                conn.flush()?;
-            }
-            Event::KeyPress(event) => {
-                let modifier = if event.state & u16::from(KeyButMask::SHIFT) == 0 { Modifier::Key } else { Modifier::ShiftKey };
-                let keysym = keytable.get_keysym(modifier,event.detail);
-                if keysym.is_err() { break; }
-                let keysym = keysym.unwrap();
-
-                println!("keypress {}", keysym.as_char().unwrap());
-                // c.input_char(keysym.as_char().unwrap());
-                // draw_text(&conn, screen, win, 10, 140, "fixed", &"pee")?;
-                conn.flush()?;
-            }
-            _ => {
-
-            }
-        }
-    }
-
-    drop(&conn);
-    Ok(())
-}
-*/
 
 pub fn create_win<C: Connection>(
     conn: &C,

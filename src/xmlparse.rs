@@ -4,11 +4,11 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use roxmltree::{Document, ParsingOptions, Node};
 
-use super::db::{Connection, Entry};
+use super::db::{DBConnection, Entry};
 use super::db::insert_entry;
 use super::error::{BoxResult, SimpleError};
 
-pub fn parse_jmdict_xml(conn: &mut Connection, path: &Path, tags: &HashSet<&str>) -> BoxResult<()> {
+pub fn parse_jmdict_xml(conn: &mut DBConnection, path: &Path, tags: &HashSet<&str>) -> BoxResult<()> {
 
     let text = std::fs::read_to_string(path).unwrap();
     let opt = ParsingOptions { allow_dtd: true };
@@ -26,7 +26,7 @@ pub fn parse_jmdict_xml(conn: &mut Connection, path: &Path, tags: &HashSet<&str>
     Ok(())
 }
 
-fn parse_entry(conn: &Connection, entry_node: &Node, tags: &HashSet<&str>) -> BoxResult<()> {
+fn parse_entry(conn: &DBConnection, entry_node: &Node, tags: &HashSet<&str>) -> BoxResult<()> {
 
     let mut entries: HashMap<String, Vec<Entry>> = HashMap::new();
 
