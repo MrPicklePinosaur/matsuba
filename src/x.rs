@@ -24,12 +24,17 @@ pub struct XSession<'a, C: Connection> {
     conn: &'a C,
     screen: &'a Screen,
     completion_box: Option<Window>,
+    completion_box_text: String,
     completion_gc: Gcontext,
     keytable: KeyTable,
     converter: Converter<'a>,
     db_conn: DBConnection,
     running: bool,
 }
+
+// TODO replace these
+const TEXT_WIDTH: u32 = 10;
+const TEXT_HEIGHT: u32 = 20;
 
 impl<'a, C: Connection> XSession<'a, C> {
 
@@ -49,6 +54,7 @@ impl<'a, C: Connection> XSession<'a, C> {
             conn: conn,
             screen: screen,
             completion_box: None,
+            completion_box_text: String::new(),
             completion_gc: completion_gc,
             keytable: keytable,
             converter: converter,
@@ -95,6 +101,10 @@ impl<'a, C: Connection> XSession<'a, C> {
         let keysym = keysym.unwrap();
 
         match keysym {
+            KeySym::KEY_GRAVE => {
+                // temp way to exit
+                self.running = false;
+            }
             KeySym::KEY_RETURN => {
                 let output = self.converter.accept();
 
@@ -109,10 +119,16 @@ impl<'a, C: Connection> XSession<'a, C> {
                 self.conn.send_event(false, focused_win, EventMask::KeyPress, )?;
                 */
 
-                self.running = false;
+                // close completion box when done
+                self.destroy_completion_box()?;
+                self.completion_box = None;
+                self.completion_box_text = self.converter.output.clone();
+                println!("{}", self.converter.output);
+
             }
             KeySym::KEY_BACKSPACE => {
                 self.converter.del_char();
+                self.completion_box_text = self.converter.output.clone();
                 println!("{}", self.converter.output);
             }
             KeySym::KEY_TAB => {
@@ -121,15 +137,25 @@ impl<'a, C: Connection> XSession<'a, C> {
                 let converted = db::search(&self.db_conn, &output)?;
 
                 if converted.len() == 0 {
+                    self.completion_box_text = output.clone();
                     println!("{}", output);
                 } else {
+                    self.completion_box_text = converted.get(0).unwrap().k_ele.clone();
                     println!("{}", converted.get(0).unwrap().k_ele);
                 }
             }
             _ => {
+
+                // reopen completion window if closed
+                if self.completion_box.is_none() {
+                    // TODO get position that is typing
+                    self.create_completion_box((event.event_x, event.event_y))?;
+                }
+
                 let ch = keysym.as_char();
                 if ch.is_none() { return Ok(()); }
                 self.converter.input_char(ch.unwrap());
+                self.completion_box_text = self.converter.output.clone();
                 println!("{}", self.converter.output);
             }
         }
@@ -137,10 +163,7 @@ impl<'a, C: Connection> XSession<'a, C> {
         Ok(())
     }
 
-    pub fn create_completion_box(&mut self, position: (i16, i16), text: &str) -> BoxResult<()> {
-
-        // TODO temp
-        const TEXT_WIDTH: u16 = 5;
+    pub fn create_completion_box(&mut self, position: (i16, i16)) -> BoxResult<()> {
 
         // create completion box window
         let win = self.conn.generate_id()?;
@@ -153,8 +176,8 @@ impl<'a, C: Connection> XSession<'a, C> {
             self.screen.root,
             position.0,
             position.1,
-            text.len() as u16 * TEXT_WIDTH,
-            config::COMPLETION_BOX_HEIGHT,
+            TEXT_WIDTH as u16,
+            TEXT_HEIGHT as u16,
             0,
             WindowClass::INPUT_OUTPUT,
             self.screen.root_visual,
@@ -170,7 +193,15 @@ impl<'a, C: Connection> XSession<'a, C> {
     pub fn render_completion_box(&self) -> BoxResult<()> {
 
         if self.completion_box.is_none() { return Ok(()); }
-        self.conn.map_window(self.completion_box.unwrap())?;
+        let win = self.completion_box.unwrap();
+        
+        // resize window to fit text
+        let values_list = ConfigureWindowAux::default()
+            .width(TEXT_WIDTH*(self.completion_box_text.len() as u32));
+        self.conn.configure_window(win, &values_list)?;
+
+        draw_text(self.conn, self.screen, win, TEXT_WIDTH as i16, TEXT_HEIGHT as i16, "fixed", &self.completion_box_text)?;
+        self.conn.map_window(win)?;
 
         Ok(())
     }
@@ -185,6 +216,43 @@ impl<'a, C: Connection> XSession<'a, C> {
         return self.running;
     }
 
+}
+
+pub fn draw_text<C:Connection>(
+    conn: &C,
+    screen: &Screen,
+    win: Window,
+    x: i16,
+    y: i16,
+    font_name: &str,
+    text: &str
+) -> Result<(), Box<dyn std::error::Error>> {
+
+    let gc = get_font(conn, screen, win, font_name)?;
+    conn.image_text8(win, gc, x, y, text.as_bytes())?;
+    conn.free_gc(gc)?;
+    Ok(())
+}
+
+fn get_font<C: Connection>(
+    conn: &C,
+    screen: &Screen,
+    win: Window,
+    font_name: &str
+) -> Result<Gcontext, ReplyOrIdError> {
+
+    let font = conn.generate_id()?;
+    conn.open_font(font, font_name.as_bytes())?;
+
+    let gc = conn.generate_id()?;
+    let values_list = CreateGCAux::default()
+        .foreground(screen.black_pixel)
+        .background(screen.white_pixel)
+        .font(font);
+    conn.create_gc(gc, win, &values_list)?;
+    conn.close_font(font)?;
+    
+    Ok(gc)
 }
 
 pub fn create_win<C: Connection>(
@@ -261,42 +329,6 @@ pub fn render_glyph<C: Connection>(
     Ok(())
 }
 
-pub fn get_font<C: Connection>(
-    conn: &C,
-    screen: &Screen,
-    win: Window,
-    font_name: &str
-) -> Result<Gcontext, ReplyOrIdError> {
-
-    let font = conn.generate_id()?;
-    conn.open_font(font, font_name.as_bytes())?;
-
-    let gc = conn.generate_id()?;
-    let values_list = CreateGCAux::default()
-        .foreground(screen.black_pixel)
-        .background(screen.white_pixel)
-        .font(font);
-    conn.create_gc(gc, win, &values_list)?;
-    conn.close_font(font)?;
-    
-    Ok(gc)
-}
-
-pub fn draw_text<C:Connection>(
-    conn: &C,
-    screen: &Screen,
-    win: Window,
-    x: i16,
-    y: i16,
-    font_name: &str,
-    text: &str
-) -> Result<(), Box<dyn std::error::Error>> {
-
-    let gc = get_font(conn, screen, win, font_name)?;
-    conn.image_text8(win, gc, x, y, text.as_bytes())?;
-    conn.free_gc(gc)?;
-    Ok(())
-}
 
 // glyph debug functions from https://github.com/PistonDevelopers/freetype-rs/blob/master/examples/single_glyph.rs
 const WIDTH: usize = 32;

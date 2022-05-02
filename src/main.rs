@@ -16,7 +16,6 @@ fn main() -> BoxResult<()> {
     let dfa = converter::build_dfa();
     let mut session = XSession::new(&conn, screen, &dfa)?;
     session.configure_root()?;
-    session.create_completion_box((100, 100), "testingtestingtesting")?;
 
     while session.is_running() {
         session.render_completion_box()?;
