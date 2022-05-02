@@ -3,8 +3,6 @@ use x11rb::connection::Connection;
 use matsuba::{
     converter,
     x::XSession,
-    db,
-    cli,
     error::BoxResult,
 };
 
