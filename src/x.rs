@@ -15,7 +15,7 @@ use super::error::{BoxResult, SimpleError};
 use super::converter::{State, Converter};
 use super::db;
 use super::db::DBConnection;
-use super::xutils::{create_face, draw_text};
+use super::xutils::{create_face, create_glyph, draw_text};
 
 pub struct XSession<'a, C: Connection> {
     conn: &'a C,
@@ -78,18 +78,18 @@ impl<'a, C: Connection> XSession<'a, C> {
 
         let pictformats = query_pict_formats(self.conn)?.reply()?;
         // TODO hardcoded pictformat for now
-        let format = pictformats.formats.iter().find(|f| f.id == 41).unwrap();
-        // for pf in pictformats.formats {
-        //     println!("{:?}", pf);
-        // }
-        println!("{:?}", format);
+        let format = pictformats.formats.iter().find(|f| f.id == 35).unwrap();
+        for pf in pictformats.formats.iter() {
+            println!("{:?}", pf);
+        }
+        // println!("{:?}", format);
 
         let face = create_face("sans")?;
 
         // xcb glyph init
-        // let gsid = self.conn.generate_id()?;
-        // create_glyph_set(self.conn, gsid, format.id)?.check()?;
-        // create_glyph(&conn, &face, gsid, 'あ')?;
+        let gsid = self.conn.generate_id()?;
+        create_glyph_set(self.conn, gsid, format.id)?.check()?;
+        create_glyph(self.conn, &face, gsid, 'あ')?;
         Ok(())
     }
 
@@ -251,7 +251,7 @@ impl<'a, C: Connection> XSession<'a, C> {
             .width(TEXT_WIDTH*(self.completion_box_text.len() as u32));
         self.conn.configure_window(win, &values_list)?;
 
-        draw_text(self.conn, self.screen, win, TEXT_WIDTH as i16, TEXT_HEIGHT as i16, "fixed", &self.completion_box_text)?;
+        draw_text(self.conn, self.screen, win, TEXT_WIDTH as i16, TEXT_HEIGHT as i16, "mtx", &self.completion_box_text)?;
         self.conn.map_window(win)?;
 
         Ok(())

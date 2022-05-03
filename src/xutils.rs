@@ -51,8 +51,7 @@ fn get_font<C: Connection>(
     Ok(gc)
 }
 
-// pub fn create_face(font_name: &str) -> BoxResult<freetype::Face>{
-pub fn create_face(font_name: &str) -> BoxResult<()>{
+pub fn create_face(font_name: &str) -> BoxResult<freetype::Face>{
 
     // load font using fontconfig
     let fc = Fontconfig::new().ok_or(Box::new(SimpleError::new("could not start fontconfig")))?;
@@ -63,7 +62,7 @@ pub fn create_face(font_name: &str) -> BoxResult<()>{
     let lib = Library::init()?;
     let face = lib.new_face(font.path.as_os_str(), 0)?;
     face.set_char_size(40*64, 0, 50, 0)?;
-    Ok(())
+    Ok(face)
 }
 
 pub fn create_glyph<C: Connection>(
@@ -90,18 +89,19 @@ pub fn create_glyph<C: Connection>(
 
     // copy freetype bitmap to xcb (this code is very sketchy lmao)
     let stride = (glyphinfo.width+3)&!3;
-    // println!("stride {}", stride);
+    // println!("stride {} {} {}", glyphinfo.width, stride, glyphinfo.height);
     let input_bitmap = glyph.bitmap().buffer().to_owned();
     let mut output_bitmap = vec![0u8; (stride*glyphinfo.height) as usize];
     for y in 0..glyphinfo.height {
         output_bitmap[(y*stride) as usize..((y+1)*stride-(stride-glyphinfo.width)) as usize]
             .copy_from_slice(&input_bitmap[(y*glyphinfo.width) as usize..((y+1)*glyphinfo.width) as usize]);
     }
-    add_glyphs(conn, gsid, &[glyph_index], &[glyphinfo], &output_bitmap)?;
+    // add_glyphs(conn, gsid, &[glyph_index], &[glyphinfo], &output_bitmap)?.check()?;
+    add_glyphs(conn, gsid, &[glyph_index], &[glyphinfo], &input_bitmap)?.check()?;
 
     // debug_glyph(face.glyph());
-    println!("{:?}", glyphinfo);
-    println!("{:?}", output_bitmap);
+    // println!("{:?}", glyphinfo);
+    // println!("{:?}", output_bitmap);
 
     Ok(())
 }
