@@ -9,7 +9,6 @@ use x11rb::{
     },
 };
 use xmodmap::{KeyTable, Modifier, KeySym};
-use freetype::Library;
 
 use super::error::{BoxResult, SimpleError};
 use super::converter::{State, Converter};
@@ -262,6 +261,55 @@ impl<'a, C: Connection> XSession<'a, C> {
         self.conn.destroy_window(self.completion_box.unwrap())?;
         Ok(())
     }
+
+    fn send_keypress(&self, win: Window, keysym: KeySym) -> BoxResult<()> {
+
+        // get keycode from keymask
+        let (modifier, keycode) = self.keytable.get_key(keysym)?;
+        let modifier = match modifier {
+            Modifier::Key => 0,
+            Modifier::ShiftKey => u16::from(KeyButMask::SHIFT),
+            // TODO this is sketchy
+            _ => { return Err(Box::new(SimpleError::new("invalid modifier"))); }
+        };
+
+        let press_event = KeyPressEvent {
+            response_type: KEY_PRESS_EVENT,
+            detail: keycode,
+            sequence: 0,
+            time: CURRENT_TIME,
+            root: self.screen.root,
+            event: self.screen.root,
+            child: win,
+            root_x: 1,
+            root_y: 1,
+            event_x: 1,
+            event_y: 1,
+            state: modifier,
+            same_screen: true,
+        };
+        self.conn.send_event(false, win, EventMask::KEY_PRESS, press_event)?.check()?;
+
+        let release_event = KeyReleaseEvent {
+            response_type: KEY_RELEASE_EVENT,
+            detail: keycode,
+            sequence: 0,
+            time: CURRENT_TIME,
+            root: self.screen.root,
+            event: self.screen.root,
+            child: win,
+            root_x: 1,
+            root_y: 1,
+            event_x: 1,
+            event_y: 1,
+            state: modifier,
+            same_screen: true,
+        };
+        self.conn.send_event(false, win, EventMask::KEY_RELEASE, release_event)?.check()?;
+
+        Ok(())
+    }
+
 
     pub fn is_running(&self) -> bool {
         return self.running;

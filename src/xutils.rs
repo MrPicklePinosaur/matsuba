@@ -11,7 +11,6 @@ use fontconfig::Fontconfig;
 use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
 
-use super::config;
 use super::error::{BoxResult, SimpleError};
 
 pub fn draw_text<C:Connection>(
