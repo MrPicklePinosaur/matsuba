@@ -9,12 +9,13 @@ use x11rb::{
     },
 };
 use xmodmap::{KeyTable, Modifier, KeySym};
+use freetype::Library;
 
 use super::error::{BoxResult, SimpleError};
 use super::converter::{State, Converter};
 use super::db;
 use super::db::DBConnection;
-use super::xutils::draw_text;
+use super::xutils::{create_face, draw_text};
 
 pub struct XSession<'a, C: Connection> {
     conn: &'a C,
@@ -70,6 +71,25 @@ impl<'a, C: Connection> XSession<'a, C> {
             return Err(Box::new(SimpleError::new("error grabbing keyboard")));
         }
 
+        Ok(())
+    }
+
+    pub fn font_init(&self) -> BoxResult<()> {
+
+        let pictformats = query_pict_formats(self.conn)?.reply()?;
+        // TODO hardcoded pictformat for now
+        let format = pictformats.formats.iter().find(|f| f.id == 41).unwrap();
+        // for pf in pictformats.formats {
+        //     println!("{:?}", pf);
+        // }
+        println!("{:?}", format);
+
+        let face = create_face("sans")?;
+
+        // xcb glyph init
+        // let gsid = self.conn.generate_id()?;
+        // create_glyph_set(self.conn, gsid, format.id)?.check()?;
+        // create_glyph(&conn, &face, gsid, 'あ')?;
         Ok(())
     }
 
@@ -189,7 +209,7 @@ impl<'a, C: Connection> XSession<'a, C> {
         // close completion box when done
         self.destroy_completion_box()?;
         self.completion_box = None;
-        self.completion_box_text = self.converter.output.clone();
+        self.completion_box_text = String::new();
 
         Ok(())
     }

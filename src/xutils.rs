@@ -51,6 +51,21 @@ fn get_font<C: Connection>(
     Ok(gc)
 }
 
+// pub fn create_face(font_name: &str) -> BoxResult<freetype::Face>{
+pub fn create_face(font_name: &str) -> BoxResult<()>{
+
+    // load font using fontconfig
+    let fc = Fontconfig::new().ok_or(Box::new(SimpleError::new("could not start fontconfig")))?;
+    let font = fc.find(font_name, None).ok_or(Box::new(SimpleError::new("could not find font")))?;
+    println!("{}: {}", font.name, font.path.display());
+
+    // freetype init
+    let lib = Library::init()?;
+    let face = lib.new_face(font.path.as_os_str(), 0)?;
+    face.set_char_size(40*64, 0, 50, 0)?;
+    Ok(())
+}
+
 pub fn create_glyph<C: Connection>(
     conn: &C,
     face: &Face,
