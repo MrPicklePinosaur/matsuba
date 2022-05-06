@@ -10,6 +10,7 @@ use x11rb::{
 use fontconfig::Fontconfig;
 use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
+use xmodmap::{KeySym, Modifier};
 
 use super::error::{BoxResult, SimpleError};
 
@@ -157,5 +158,21 @@ fn debug_glyph(glyph: &GlyphSlot) {
         println!("");
     }
 
+}
+
+pub fn x_to_xmodmap_modifier(state: u16) -> Modifier {
+    if state & u16::from(KeyButMask::SHIFT) == 0 {
+        Modifier::Key
+    } else {
+        Modifier::ShiftKey
+    }
+}
+
+pub fn xmodmap_to_x_modifier(modifier: Modifier) -> u16 {
+    match modifier {
+        Modifier::Key => 0,
+        Modifier::ShiftKey => u16::from(KeyButMask::SHIFT),
+        _ => 0, // TODO maybe should return error?
+    }
 }
 

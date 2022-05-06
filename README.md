@@ -13,6 +13,7 @@ Each component should be separable as it's own library.
 ## DEPENDENCIES
 
 - fontconfig
+- xdotool (for now)
 
 ## FETCHING DICTIONARY
 

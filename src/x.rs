@@ -9,12 +9,14 @@ use x11rb::{
     },
 };
 use xmodmap::{KeyTable, Modifier, KeySym};
+use std::process::Command;
 
 use super::error::{BoxResult, SimpleError};
 use super::converter::{State, Converter};
 use super::db;
+use super::config::{MUHENKAN_KEY, HENKAN_KEY};
 use super::db::DBConnection;
-use super::xutils::{create_face, create_glyph, draw_text};
+use super::xutils::{create_face, create_glyph, draw_text, x_to_xmodmap_modifier, xmodmap_to_x_modifier};
 
 pub struct XSession<'a, C: Connection> {
     conn: &'a C,
@@ -27,6 +29,7 @@ pub struct XSession<'a, C: Connection> {
     converter: Converter<'a>,
     db_conn: DBConnection,
     running: bool,
+    henkan: bool,
 }
 
 // TODO replace these
@@ -52,6 +55,7 @@ impl<'a, C: Connection> XSession<'a, C> {
             converter: converter,
             db_conn: db_conn,
             running: true,
+            henkan: true,
         })
 
     }
@@ -64,12 +68,28 @@ impl<'a, C: Connection> XSession<'a, C> {
             .event_mask(attrs.your_event_mask|EventMask::SUBSTRUCTURE_NOTIFY); // TODO this might need to be attrs.all_event_masks
         self.conn.change_window_attributes(self.screen.root, &values_list)?.check()?;
 
+        self.grab_keyboard()?;
+
+        Ok(())
+    }
+
+    fn grab_keyboard(&self) -> BoxResult<()> {
+
         // grab user keypresses
         let grab_status = self.conn.grab_keyboard(false, self.screen.root, CURRENT_TIME, GrabMode::ASYNC, GrabMode::ASYNC)?.reply()?;
         if grab_status.status != GrabStatus::SUCCESS {
             return Err(Box::new(SimpleError::new("error grabbing keyboard")));
         }
+        Ok(())
+    }
 
+    fn ungrab_keyboard(&self) -> BoxResult<()> {
+        self.conn.ungrab_keyboard(CURRENT_TIME)?.check()?;
+        // the only key we still want to grab is the muhenkan key
+
+        let (henkan_mod, henkan_keysym) = self.keytable.get_key(HENKAN_KEY)?;
+        let henkan_mod = xmodmap_to_x_modifier(henkan_mod);
+        self.conn.grab_key(true, self.screen.root, henkan_mod, henkan_keysym, GrabMode::ASYNC, GrabMode::ASYNC)?.check()?;
         Ok(())
     }
 
@@ -106,11 +126,33 @@ impl<'a, C: Connection> XSession<'a, C> {
 
     fn handle_keypress(&mut self, event: &KeyPressEvent) -> BoxResult<()> {
 
-        let modifier = if event.state & u16::from(KeyButMask::SHIFT) == 0 { Modifier::Key } else { Modifier::ShiftKey };
+        // extract key press info
+        let modifier = x_to_xmodmap_modifier(event.state);
         let keysym = self.keytable.get_keysym(modifier, event.detail);
         if keysym.is_err() { return Ok(()); }
         let keysym = keysym.unwrap();
 
+        // key bindings that are active regardless if we are converting
+        match keysym {
+            MUHENKAN_KEY => {
+                self.henkan = false;
+                self.ungrab_keyboard()?;
+                return Ok(());
+            },
+            HENKAN_KEY => {
+                self.henkan = true;
+                self.grab_keyboard()?;
+                return Ok(());
+            }
+            _ => {}
+        };
+
+        // exit if we are not converting
+        if !self.henkan {
+            return Ok(());
+        }
+
+        // keybindings that are active only when we are converted
         match keysym {
             KeySym::KEY_GRAVE => {
                 // temp way to exit
@@ -188,11 +230,22 @@ impl<'a, C: Connection> XSession<'a, C> {
     fn output_conversion(&mut self) -> BoxResult<()> {
 
         println!("accept {}", self.completion_box_text);
-        self.converter.accept();
 
         // find currently focused window
         let focused_win = self.conn.get_input_focus()?.reply()?.focus;
-        self.send_keypress(focused_win, KeySym::KEY_A)?;
+
+        // TODO this is ugly and also cheating lmao
+        self.ungrab_keyboard()?;
+        let result = Command::new("xdotool")
+            .args(["type", "--window", &focused_win.to_string(), "--delay", "200", &self.completion_box_text])
+            .output();
+        if result.is_err() {
+            println!("errored {:?}", result);
+        }
+        self.grab_keyboard()?;
+        // self.send_keypress(focused_win, KeySym::KEY_A)?;
+
+        self.converter.accept();
 
         // clear conversion options
         self.conversion_options.clear();
@@ -260,12 +313,7 @@ impl<'a, C: Connection> XSession<'a, C> {
 
         // get keycode from keymask
         let (modifier, keycode) = self.keytable.get_key(keysym)?;
-        let modifier = match modifier {
-            Modifier::Key => 0,
-            Modifier::ShiftKey => u16::from(KeyButMask::SHIFT),
-            // TODO this is sketchy
-            _ => { return Err(Box::new(SimpleError::new("invalid modifier"))); }
-        };
+        let modifier = xmodmap_to_x_modifier(modifier);
 
         let press_event = KeyPressEvent {
             response_type: KEY_PRESS_EVENT,
@@ -304,9 +352,9 @@ impl<'a, C: Connection> XSession<'a, C> {
         Ok(())
     }
 
-
     pub fn is_running(&self) -> bool {
         return self.running;
     }
 
 }
+
