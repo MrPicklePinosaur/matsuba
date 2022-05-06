@@ -162,7 +162,13 @@ pub enum KeySym {
     KEY_TAB,
     KEY_ESCAPE,
     KEY_GRAVE,
-    KEY_TILDE
+    KEY_TILDE,
+
+    KEY_KANA_A,
+    KEY_KANA_I,
+    KEY_KANA_U,
+    KEY_KANA_E,
+    KEY_KANA_O,
 }
 
 impl FromStr for KeySym {
@@ -292,6 +298,11 @@ impl KeySym {
                 KeySym::KEY_x => 0x78,
                 KeySym::KEY_y => 0x79,
                 KeySym::KEY_z => 0x7a,
+                KeySym::KEY_KANA_A => 0x4b1,
+                KeySym::KEY_KANA_I => 0x4b2,
+                KeySym::KEY_KANA_U => 0x4b3,
+                KeySym::KEY_KANA_E => 0x4b4,
+                KeySym::KEY_KANA_O => 0x4b5,
                 _ => 0x00,
             } as u32)
         )

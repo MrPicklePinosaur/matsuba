@@ -190,16 +190,9 @@ impl<'a, C: Connection> XSession<'a, C> {
         println!("accept {}", self.completion_box_text);
         self.converter.accept();
 
-        /*
         // find currently focused window
         let focused_win = self.conn.get_input_focus()?.reply()?.focus;
-        let keypress_event = KeyPressEvent {
-            // response_type:,
-            // detail:
-            
-        }
-        self.conn.send_event(false, focused_win, EventMask::KeyPress, )?;
-        */
+        self.send_keypress(focused_win, KeySym::KEY_A)?;
 
         // clear conversion options
         self.conversion_options.clear();
@@ -263,6 +256,7 @@ impl<'a, C: Connection> XSession<'a, C> {
     }
 
     fn send_keypress(&self, win: Window, keysym: KeySym) -> BoxResult<()> {
+    // fn send_keypress(&self, win: Window, keycode: u8, modifier: u16) -> BoxResult<()> {
 
         // get keycode from keymask
         let (modifier, keycode) = self.keytable.get_key(keysym)?;
