@@ -3,10 +3,10 @@ use std::collections::HashSet;
 
 use argparse::{Cli, Command, Flag, FlagParse};
 
-use super::error::{BoxResult, SimpleError};
-use super::db;
-use super::xmlparse;
-use super::converter::{Converter, build_dfa};
+use matsuba::error::{BoxResult, SimpleError};
+use matsuba::db;
+use matsuba::xmlparse;
+use matsuba::converter::{Converter, build_dfa};
 
 static HELP_MSG: &str = "\
 USAGE:
