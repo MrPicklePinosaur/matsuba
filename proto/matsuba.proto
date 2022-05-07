@@ -1,25 +1,24 @@
 
 syntax = "proto3";
 
+package matsubaproto;
+
 message ConvertRequest {
     string str = 1;
 }
-
 message ConvertResponse {
     string converted = 1;
 }
 
-service Convert {
-    rpc Convert(ConvertRequest) returns (ConvertResponse);
+message GetStateRequest {
 }
 
-message StateRequest {
-}
-
-message StateResponse {
+message GetStateResponse {
     bool henkan = 1;
 }
 
-service State {
-    rpc GetState(StateRequest) returns (StateResponse);
+service Matsuba {
+    rpc Convert(ConvertRequest) returns (ConvertResponse);
+    /* rpc GetState(GetStateRequest) returns (GetStateResponse); */
 }
+
