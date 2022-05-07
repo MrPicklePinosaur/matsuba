@@ -25,17 +25,23 @@ pub fn runcli() -> BoxResult<()> {
 
     let cli = Cli {
         program_name: "matsuba",
-        synopsis: "",
+        synopsis: "simple japanese ime",
         commands: vec![
             Command {
-                desc: "run matsuba daemon",
                 command_name: "run",
+                desc: "run matsuba daemon",
                 handler: handle_run,
                 flags: vec![],
             },
             Command {
-                desc: "fetch word lists",
+                command_name: "unlock",
+                desc: "removes lock in the event of a crash",
+                handler: handle_unlock,
+                flags: vec![],
+            },
+            Command {
                 command_name: "fetch",
+                desc: "fetch word lists",
                 handler: handle_fetch,
                 flags: vec![
                     Flag::new('t')
@@ -45,8 +51,8 @@ pub fn runcli() -> BoxResult<()> {
                 ],
             },
             Command {
-                desc: "use the matsuba input converter",
                 command_name: "convert",
+                desc: "use the matsuba input converter",
                 handler: handle_convert,
                 flags: vec![
                     Flag::new('k')
@@ -59,8 +65,8 @@ pub fn runcli() -> BoxResult<()> {
                 ],
             },
             Command {
-                desc: "query and mutate state of matsuba",
                 command_name: "state",
+                desc: "query and mutate state of matsuba",
                 handler: handle_state,
                 flags: vec![
                     Flag::new('h')
@@ -85,18 +91,16 @@ fn handle_run(flagparse: FlagParse) -> BoxResult<()> {
 
     println!("run command");
 
+    // obtain lock
+
     Ok(())
 }
 
-// from https://stackoverflow.com/questions/27582739/how-do-i-create-a-hashmap-literal
-macro_rules! hashset {
-    ($($v:expr),*) => {
-        {
-            use std::iter::{Iterator, IntoIterator};
-            Iterator::collect(IntoIterator::into_iter([$($v,)*]))
-        }
-    }
+fn handle_unlock(flagparse: FlagParse) -> BoxResult<()> {
+
+    Ok(())
 }
+
 fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
 
     if flagparse.args.len() == 0 {
@@ -170,6 +174,15 @@ fn handle_state(flagparse: FlagParse) -> BoxResult<()> {
     Ok(())
 }
 
+// from https://stackoverflow.com/questions/27582739/how-do-i-create-a-hashmap-literal
+macro_rules! hashset {
+    ($($v:expr),*) => {
+        {
+            use std::iter::{Iterator, IntoIterator};
+            Iterator::collect(IntoIterator::into_iter([$($v,)*]))
+        }
+    }
+}
 fn all_tags<'a>() -> HashSet<&'a str> {
 
     let default_tags: HashSet<&str> = hashset!{

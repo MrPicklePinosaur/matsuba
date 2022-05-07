@@ -6,9 +6,6 @@ authors = ["pinosaur"]
 description = "lightweight japanese ime"
 repository = "https://github.com/MrPicklePinosaur/matsuba"
 
-[[bin]]
-name = "matsuba"
-
 [workspace]
 members = ["crates/*"]
 
@@ -16,8 +13,12 @@ members = ["crates/*"]
 argparse = { path = "crates/argparse" }
 xmodmap = { path = "crates/xmodmap" }
 
+tonic = { version = "0.7", features = [] }
 x11rb = { version = "0.9.0", features = ["render"] }
 fontconfig = { version = "0.5.0" }
 freetype-rs = { version = "0.29.1" }
 rusqlite = { version = "0.27.0", features = ["bundled"] }
 roxmltree = { version = "0.14.1" }
+
+[build-dependencies]
+tonic-build = "0.7"

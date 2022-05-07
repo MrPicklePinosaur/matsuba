@@ -40,9 +40,11 @@ sports, names etc), you can see a full list of 'filters'
 - [X] set up database (probably sqlite)
 - [X] arg parsing
 - [ ] glyph rendering
-- [ ] make user type accepted string
-- [ ] henkan + muhenkan
+- [x] make user type accepted string
+- [x] henkan + muhenkan
 - [ ] conversion menu for kanji
+- [ ] refactor to daemon + cli to manage
+- [ ] utility cli to do kana conversions + kanji conversions
 
 ## RESOURCES
 
