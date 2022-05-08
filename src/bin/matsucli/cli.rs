@@ -10,9 +10,6 @@ use matsubaproto::{ConvertRequest, ConvertResponse};
 use argparse::{Cli, Command, Flag, FlagParse};
 
 use matsuba::error::{BoxResult, SimpleError};
-use matsuba::db;
-use matsuba::xmlparse;
-use matsuba::converter::{Converter, build_dfa};
 
 use tokio::runtime::Runtime;
 
@@ -116,7 +113,10 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
 
         let response = client.convert(Request::new(
             ConvertRequest {
-                raw: "konnichiha".to_string(),
+                // TODO only taking first arg for now
+                raw: flagparse.args.get(0).unwrap().to_string(),
+                kana_only: flagparse.get_flag('k'),
+                result_count: flagparse.get_flag_value::<usize>('c').unwrap_or(1) as i32,
             }
         )).await.unwrap();
         println!("{:?}", response);

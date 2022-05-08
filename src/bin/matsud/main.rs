@@ -1,23 +1,12 @@
 
-pub mod matsubaproto {
-    tonic::include_proto!("matsubaproto");
-}
-use tonic::{Request, Response, Status};
+mod service;
+mod db;
+mod x;
+mod xmlparse;
+
 use tonic::transport::Server;
-use matsubaproto::matsuba_server::{Matsuba, MatsubaServer};
-use matsubaproto::{ConvertRequest, ConvertResponse};
 
-#[derive(Debug)]
-struct MatsubaService;
-
-#[tonic::async_trait]
-impl Matsuba for MatsubaService {
-
-    async fn convert(&self, request: Request<ConvertRequest>) -> Result<Response<ConvertResponse>,Status> {
-        Ok(Response::new(ConvertResponse{converted: "こんにちは世界".to_string() }))
-    }
-
-}
+use service::{MatsubaServer, MatsubaService};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -43,8 +43,9 @@ sports, names etc), you can see a full list of 'filters'
 - [x] make user type accepted string
 - [x] henkan + muhenkan
 - [ ] conversion menu for kanji
-- [ ] refactor to daemon + cli to manage
+- [ ] refactor to daemon + cli to manage (rpc calls)
 - [ ] utility cli to do kana conversions + kanji conversions
+- [ ] rewrite matsuba-fetch script as a series of command calls in matsucli
 
 ## RESOURCES
 

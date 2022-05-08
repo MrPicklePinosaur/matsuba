@@ -5,9 +5,11 @@ package matsubaproto;
 
 message ConvertRequest {
     string raw = 1;
+    bool kana_only = 2;
+    int32 result_count = 3;
 }
 message ConvertResponse {
-    string converted = 1;
+    repeated string converted = 1;
 }
 
 message GetStateRequest {

@@ -4,9 +4,9 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use roxmltree::{Document, ParsingOptions, Node};
 
+use matsuba::error::{BoxResult, SimpleError};
 use super::db::{DBConnection, Entry};
 use super::db::insert_entry;
-use super::error::{BoxResult, SimpleError};
 
 pub fn parse_jmdict_xml(conn: &mut DBConnection, path: &Path, tags: &HashSet<&str>) -> BoxResult<()> {
 
