@@ -1,15 +1,20 @@
 
-use std::collections::HashSet;
-
 pub mod matsubaproto {
     tonic::include_proto!("matsubaproto");
 }
 use tonic::Request;
 use matsubaproto::matsuba_client::MatsubaClient;
-use matsubaproto::{ConvertRequest, ConvertResponse};
+use matsubaproto::{
+    ConvertRequest, ConvertResponse,
+    GetStateRequest, GetStateResponse,
+    FetchRequest, FetchResponse
+};
 use argparse::{Cli, Command, Flag, FlagParse};
 
-use matsuba::error::{BoxResult, SimpleError};
+use matsuba::{
+    error::{BoxResult, SimpleError},
+    common
+};
 
 use tokio::runtime::Runtime;
 
@@ -25,6 +30,8 @@ convert <phrase>
 ";
 // state is for getting info about the daemon
 // like current kana mode etc (useful for scripts)
+
+static CONNECTION_STRING: &str = "http://[::1]:10000";
 
 pub fn runcli() -> BoxResult<()> {
 
@@ -101,7 +108,44 @@ fn handle_unlock(flagparse: FlagParse) -> BoxResult<()> {
 }
 
 fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
-    todo!()
+
+    if flagparse.args.len() == 0 {
+        return Err(Box::new(SimpleError::new("invalid number of args")));
+    }
+
+    // tag customization
+    let mut default_tags = common::all_tags();
+    let tag_options = flagparse.get_flag_value::<String>('t').unwrap_or(String::new());
+    for option in tag_options.split(",") {
+
+        let (mode, tag) = option.split_at(1);
+        if tag.len() == 0 { return Err(Box::new(SimpleError::new("invalid tag"))); }
+
+        if mode == "+" {
+            default_tags.insert(tag);
+        } else if mode == "-" {
+            default_tags.remove(tag);
+        } else {
+            return Err(Box::new(SimpleError::new("invalid tag")));
+        }
+    }
+
+    // TODO this may be pretty inefficient
+    let tags = default_tags.into_iter().map(|x| x.to_string()).collect::<Vec<String>>();
+
+    Runtime::new()?.block_on(async {
+
+        let mut client = MatsubaClient::connect(CONNECTION_STRING).await.unwrap();
+
+        let response = client.fetch(Request::new(
+            FetchRequest {
+                tags: tags,
+                database_path: flagparse.args[0].clone()
+            }
+        )).await.unwrap();
+
+    });
+    Ok(())
 }
 
 fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
@@ -109,7 +153,7 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
     Runtime::new()?.block_on(async {
 
         // TODO proper error handling inside async block
-        let mut client = MatsubaClient::connect("http://[::1]:10000").await.unwrap();
+        let mut client = MatsubaClient::connect(CONNECTION_STRING).await.unwrap();
 
         let response = client.convert(Request::new(
             ConvertRequest {

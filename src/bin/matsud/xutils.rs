@@ -12,7 +12,7 @@ use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
 use xmodmap::{KeySym, Modifier};
 
-use super::error::{BoxResult, SimpleError};
+use matsuba::error::{BoxResult, SimpleError};
 
 pub fn draw_text<C:Connection>(
     conn: &C,

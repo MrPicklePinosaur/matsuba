@@ -2,6 +2,7 @@
 mod service;
 mod db;
 mod x;
+mod xutils;
 mod xmlparse;
 
 use tonic::transport::Server;

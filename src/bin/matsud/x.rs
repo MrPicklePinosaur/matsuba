@@ -15,11 +15,11 @@ use matsuba::{
     error::{BoxResult, SimpleError},
     converter::{State, Converter},
     config::{MUHENKAN_KEY, HENKAN_KEY},
-    xutils::{create_face, create_glyph, draw_text, x_to_xmodmap_modifier, xmodmap_to_x_modifier}
 };
 
 use super::db;
 use super::db::DBConnection;
+use super::xutils::{create_face, create_glyph, draw_text, x_to_xmodmap_modifier, xmodmap_to_x_modifier};
 
 pub struct XSession<'a, C: Connection> {
     conn: &'a C,

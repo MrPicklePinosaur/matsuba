@@ -4,12 +4,20 @@ pub mod matsubaproto {
 }
 
 use matsubaproto::matsuba_server::Matsuba;
-use matsubaproto::{ConvertRequest, ConvertResponse};
+use matsubaproto::{
+    ConvertRequest, ConvertResponse,
+    GetStateRequest, GetStateResponse,
+    FetchRequest, FetchResponse
+};
 pub use matsubaproto::matsuba_server::MatsubaServer;
 use tonic::{Request, Response, Status, Code};
+use std::collections::HashSet;
 
 use matsuba::converter::{Converter, build_dfa};
-use super::db;
+use super::{
+    db,
+    xmlparse
+};
 
 #[derive(Debug)]
 pub struct MatsubaService;
@@ -47,5 +55,31 @@ impl Matsuba for MatsubaService {
         Ok(Response::new(ConvertResponse{converted: converted}))
     }
 
-}
+    async fn get_state(&self, request: Request<GetStateRequest>) -> Result<Response<GetStateResponse>,Status> {
+        Ok(Response::new(GetStateResponse{henkan: true}))
+    }
 
+    async fn fetch(&self, request: Request<FetchRequest>) -> Result<Response<FetchResponse>,Status> {
+
+        let request = request.get_ref();
+
+        let mut conn = db::get_connection()
+            .or(Err(Status::new(Code::Internal, "could not establish connection to database")))?;
+        db::init(&conn)
+            .or(Err(Status::new(Code::Internal, "failed initializing database")))?;
+
+        let path = std::path::Path::new(&request.database_path); // TODO is this dangerous?
+
+        // TODO stupid how we convert hashset to vec and then back to hashset
+        let mut tags: HashSet<&str> = HashSet::new();
+        for tag in &request.tags {
+            tags.insert(tag);
+        }
+
+        xmlparse::parse_jmdict_xml(&mut conn, path, &tags)
+            .or(Err(Status::new(Code::Internal, "issue parsing dict")))?;
+
+        Ok(Response::new(FetchResponse{}))
+    }
+
+}
