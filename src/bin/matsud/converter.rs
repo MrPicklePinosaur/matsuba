@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 use std::collections::LinkedList;
 
-use super::conversion::*;
+use matsuba::conversion::*;
 
 #[derive(Debug)]
 pub struct State {
@@ -12,9 +12,9 @@ pub struct State {
 }
 
 #[derive(Debug)]
-pub struct Converter<'a> {
-    pub start_state: &'a State,
-    pub cur_state: &'a State,
+pub struct Converter {
+    pub start_state: &'static State,
+    pub cur_state: &'static State,
     pub output: String,
     pub input: LinkedList<char>,
 }
@@ -30,9 +30,9 @@ impl State {
     }
 }
 
-impl<'a> Converter<'a> {
+impl Converter {
 
-    pub fn new(start_state: &'a State) -> Converter<'a> {
+    pub fn new(start_state: &'static State) -> Converter {
         Converter{
             start_state: start_state,
             cur_state: start_state,

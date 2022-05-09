@@ -13,14 +13,24 @@ pub use matsubaproto::matsuba_server::MatsubaServer;
 use tonic::{Request, Response, Status, Code};
 use std::collections::HashSet;
 
-use matsuba::converter::{Converter, build_dfa};
 use super::{
     db,
-    xmlparse
+    x,
+    xmlparse,
+    converter::{Converter, build_dfa},
 };
 
-#[derive(Debug)]
-pub struct MatsubaService;
+pub struct MatsubaService {
+    pub xsession: x::XSession
+}
+
+impl MatsubaService {
+
+    pub fn new() {
+
+    }
+
+}
 
 #[tonic::async_trait]
 impl Matsuba for MatsubaService {
