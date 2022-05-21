@@ -38,8 +38,7 @@ impl Matsuba for MatsubaService {
     async fn convert(&self, request: Request<ConvertRequest>) -> Result<Response<ConvertResponse>,Status> {
         let request = request.get_ref();
 
-        let dfa = build_dfa();
-        let mut c = Converter::new(&dfa);
+        let mut c = Converter::new();
 
         let conn = db::get_connection()
             .or(Err(Status::new(Code::Internal, "could not establish connection to database")))?;

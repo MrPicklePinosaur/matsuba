@@ -4,17 +4,22 @@ use std::collections::LinkedList;
 
 use matsuba::conversion::*;
 
+// TODO ownership in this entire module is fucked, please fix sometime
+
+type StateHandle = usize;
+const START_STATE: StateHandle = 0;
+
 #[derive(Debug)]
 pub struct State {
     pub accepting: Option<(String, String)>,
-    pub transitions: HashMap<char, Box<State>>,
+    pub transitions: HashMap<char, StateHandle>,
     pub depth: usize, // distance from staring state
 }
 
 #[derive(Debug)]
 pub struct Converter {
-    pub start_state: &'static State,
-    pub cur_state: &'static State,
+    pub state_pool: Vec<State>,
+    pub state_handle: StateHandle,
     pub output: String,
     pub input: LinkedList<char>,
 }
@@ -32,10 +37,10 @@ impl State {
 
 impl Converter {
 
-    pub fn new(start_state: &'static State) -> Converter {
+    pub fn new() -> Converter {
         Converter{
-            start_state: start_state,
-            cur_state: start_state,
+            state_pool: build_dfa(),
+            state_handle: START_STATE,
             output: String::from(""),  // stack structure
             input: LinkedList::new(),  // queue structure
         }
@@ -48,11 +53,11 @@ impl Converter {
 
     pub fn del_char(&mut self) {
         self.output.pop();
-        self.cur_state = self.start_state;
+        self.state_handle = START_STATE;
     }
 
     pub fn accept(&mut self) -> String {
-        self.cur_state = self.start_state;
+        self.state_handle = START_STATE;
         self.input.clear();
 
         let out = self.output.clone();
@@ -71,16 +76,16 @@ impl Converter {
         let prev_ch = self.output.chars().last();
 
         // attempt to transition on input character
-        match self.cur_state.transitions.get(&lowercase_ch) {
-            Some(ref x) => {
-                self.cur_state = x;
+        match self.state_pool[self.state_handle].transitions.get(&lowercase_ch) {
+            Some(x) => {
+                self.state_handle = *x;
             },
             None => {
-                self.cur_state = self.start_state;
+                self.state_handle = START_STATE;
 
                 // attempt transition again but from start_state
-                match self.cur_state.transitions.get(&lowercase_ch) {
-                    Some(ref x) => { self.cur_state = x; },
+                match self.state_pool[self.state_handle].transitions.get(&lowercase_ch) {
+                    Some(x) => { self.state_handle = *x; },
                     None => {},
                 }
             },
@@ -103,11 +108,11 @@ impl Converter {
         self.output.push(ch);
 
         // check if we are in accepting state
-        match self.cur_state.accepting {
+        match self.state_pool[self.state_handle].accepting {
             Some(ref x) => {
 
                 let mut is_lower: bool = false;
-                for _ in 0..self.cur_state.depth {
+                for _ in 0..self.state_pool[self.state_handle].depth {
                     is_lower = self.output.pop().unwrap().is_ascii_lowercase();
                 }
 
@@ -117,7 +122,7 @@ impl Converter {
                     false => &x.1,
                 };
                 self.output.push_str(output_ch);
-                self.cur_state = self.start_state;
+                self.state_handle = START_STATE;
             },
             None => {}
         }
@@ -125,29 +130,33 @@ impl Converter {
     }
 }
 
-pub fn build_dfa() -> State {
+// TODO this function is sorta hard to read (maybe refactor)
+pub fn build_dfa() -> Vec<State> {
     
-    let mut new_dfa = State::new(0);
+    let mut state_pool: Vec<State> = vec!(State::new(0));
 
     for conv in CONVERSION_TABLE {
-        let mut cur_state: &mut State = &mut new_dfa;
+        let mut cur_state: StateHandle = START_STATE;
+
         for (i, ch) in conv.0.chars().enumerate() {
 
             // create state of does not exist
-            if !cur_state.transitions.contains_key(&ch) {
-                let new_state = State::new(i+1);
-                cur_state.transitions.insert(ch, Box::new(new_state));
+            if !state_pool.get(cur_state).unwrap().transitions.contains_key(&ch) {
+                state_pool.push(State::new(i+1));
+                let new_state_handle = state_pool.len()-1;
+                state_pool.get_mut(cur_state).unwrap().transitions.insert(ch, new_state_handle);
             }
 
             // transition
-            cur_state = cur_state.transitions.get_mut(&ch).unwrap();
+            cur_state = *state_pool.get(cur_state).unwrap().transitions.get(&ch).unwrap();
 
             // mark as accepting if last char
             if i == conv.0.len()-1 {
-                cur_state.accepting = Some((conv.1.to_string(), conv.2.to_string()));
-            } 
+                state_pool.get_mut(cur_state).unwrap().accepting = Some((conv.1.to_string(), conv.2.to_string()));
+            }
         }
     }
-    new_dfa
+
+    state_pool
 }
 

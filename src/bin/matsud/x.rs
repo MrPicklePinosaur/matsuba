@@ -45,7 +45,7 @@ impl XSession {
         let (conn, screen_num) = x11rb::connect(None)?;
 
         let keytable = KeyTable::new()?;
-        let converter = Converter::new(dfa);
+        let converter = Converter::new();
 
         Ok(XSession {
             conn: conn,
