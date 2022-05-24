@@ -21,14 +21,16 @@ use super::{
 };
 
 pub struct MatsubaService {
-    pub xsession: x::XSession
+    // pub xsession: x::XSession
 }
 
 impl MatsubaService {
 
+    /*
     pub fn new() {
 
     }
+    */
 
 }
 

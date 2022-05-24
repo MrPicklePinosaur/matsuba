@@ -16,10 +16,12 @@ use service::{MatsubaServer, MatsubaService};
 async fn main() -> BoxResult<()> {
 
     let mut session = x::XSession::new()?;
-    session.configure_root()?;
+    session.run()?;
 
     let addr = "[::1]:10000".parse().unwrap();
-    let inner = MatsubaService {xsession: session};
+    // let inner = MatsubaService {xsession: session};
+    let inner = MatsubaService {};
+
     let svc = MatsubaServer::new(inner);
     Server::builder().add_service(svc).serve(addr).await?;
 

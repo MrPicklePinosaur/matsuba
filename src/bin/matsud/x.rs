@@ -66,7 +66,20 @@ impl XSession {
         &self.conn.setup().roots[self.screen_num]
     }
 
-    pub fn configure_root(&self) -> BoxResult<()> {
+    pub fn run(&mut self) -> BoxResult<()> {
+
+        self.configure_root()?;
+        while self.is_running() {
+            self.render_completion_box()?;
+            self.conn.flush()?;
+
+            let event = self.conn.wait_for_event()?;
+            self.handle_event(&event)?;
+        }
+        Ok(())
+    }
+
+    fn configure_root(&self) -> BoxResult<()> {
 
         // append to root window attributes
         let attrs = self.conn.get_window_attributes(self.screen().root)?.reply()?;
@@ -118,7 +131,7 @@ impl XSession {
         Ok(())
     }
 
-    pub fn handle_event(&mut self, event: &Event) -> BoxResult<()> {
+    fn handle_event(&mut self, event: &Event) -> BoxResult<()> {
 
         match event {
             Event::KeyPress(event) => {
@@ -293,7 +306,7 @@ impl XSession {
     }
 
     // pub fn render_completion_box(&self, position: (i16, i16), text: &str) -> BoxResult<()> {
-    pub fn render_completion_box(&self) -> BoxResult<()> {
+    fn render_completion_box(&self) -> BoxResult<()> {
 
         if self.completion_box.is_none() { return Ok(()); }
         let win = self.completion_box.unwrap();
