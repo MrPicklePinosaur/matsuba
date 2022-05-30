@@ -22,6 +22,7 @@ checksum = "08f9b8508dccb7687a1d6c4ce66b2b0ecef467c94667de27d8d7fe1f8d2a9cdc"
 [[package]]
 name = "argparse"
 version = "0.1.0"
+source = "git+https://github.com/MrPicklePinosaur/pino.rs#46e184d4a9a545432baedaa7e24f35b1848cfed6"
 
 [[package]]
 name = "async-stream"

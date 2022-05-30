@@ -18,7 +18,7 @@ path = "src/bin/matsud/main.rs"
 members = ["crates/*"]
 
 [dependencies]
-argparse = { path = "crates/argparse" }
+argparse = { git = "https://github.com/MrPicklePinosaur/pino.rs" }
 xmodmap = { path = "crates/xmodmap" }
 
 tonic = { version = "0.7", features = [] }
