@@ -1,5 +1,10 @@
+<div align="center">
 
-# 松葉matsuba
+# 松葉 matsuba
+
+lightweight japanese IME written in rust
+
+</div>
 
 **matsuba** - a lightweight japanese ime for x written in rust. This project
 has three main components:
@@ -27,8 +32,14 @@ sports, names etc), you can see a full list of 'filters'
 
 ## RUNNING FOR DEVELOPMENT
 
+To run the daemon
 ```
- $ cargo run
+just matsud
+```
+
+To run the cli
+```
+just matsucli
 ```
 
 ## TODO
