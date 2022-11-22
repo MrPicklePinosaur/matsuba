@@ -9,7 +9,7 @@ use matsubaproto::{
     GetStateRequest, GetStateResponse,
     FetchRequest, FetchResponse
 };
-use argparse::{Cli, Command, Flag, FlagParse};
+use pino_argparse::{Cli, Command, Flag, FlagParse};
 
 use matsuba::{
     error::{BoxResult, SimpleError},
@@ -38,7 +38,7 @@ pub fn runcli() -> BoxResult<()> {
     let cli = Cli {
         program_name: "matsucli",
         synopsis: "simple japanese ime",
-        commands: vec![
+        subcommands: vec![
             Command {
                 command_name: "run",
                 desc: "run matsuba daemon",
@@ -56,8 +56,8 @@ pub fn runcli() -> BoxResult<()> {
                 desc: "fetch word lists",
                 handler: handle_fetch,
                 flags: vec![
-                    Flag::new('t')
-                        .long("tags")
+                    Flag::new("tags")
+			.short('t')
                         .desc("specify which tags should be included or not included")
                         .parameter(),
                 ],
@@ -67,11 +67,11 @@ pub fn runcli() -> BoxResult<()> {
                 desc: "use the matsuba input converter",
                 handler: handle_convert,
                 flags: vec![
-                    Flag::new('k')
-                        .long("kana")
+                    Flag::new("kana")
+			.short('k')
                         .desc("only perform kana conversion"),
-                    Flag::new('c')
-                        .long("count")
+                    Flag::new("count")
+			.short('c')
                         .desc("limit for number of conversions to output")
                         .parameter(),
                 ],
@@ -81,16 +81,17 @@ pub fn runcli() -> BoxResult<()> {
                 desc: "query and mutate state of matsuba",
                 handler: handle_state,
                 flags: vec![
-                    Flag::new('h')
-                        .long("henkan")
+                    Flag::new("henkan")
+			.short('h')
                         .desc("enable conversion"),
-                    Flag::new('H')
-                        .long("muhenkan")
+                    Flag::new("muhenkan")
+                        .short('H')
                         .desc("disable conversion"),
                 ],
             }
         ],
         global_flags: vec![],
+	..Default::default()
     };
 
     let args = std::env::args().collect();
@@ -115,7 +116,7 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
 
     // tag customization
     let mut default_tags = common::all_tags();
-    let tag_options = flagparse.get_flag_value::<String>('t').unwrap_or(String::new());
+    let tag_options = flagparse.get_flag_value::<String>("tags").unwrap_or(String::new());
     for option in tag_options.split(",") {
 
         let (mode, tag) = option.split_at(1);
@@ -139,7 +140,7 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
 
         let response = client.fetch(Request::new(
             FetchRequest {
-                tags: tags,
+                tags,
                 database_path: flagparse.args[0].clone()
             }
         )).await.unwrap();
@@ -159,8 +160,8 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
             ConvertRequest {
                 // TODO only taking first arg for now
                 raw: flagparse.args.get(0).unwrap().to_string(),
-                kana_only: flagparse.get_flag('k'),
-                result_count: flagparse.get_flag_value::<usize>('c').unwrap_or(1) as i32,
+                kana_only: flagparse.get_flag("kana"),
+                result_count: flagparse.get_flag_value::<usize>("count").unwrap_or(1) as i32,
             }
         )).await.unwrap();
         println!("{:?}", response);

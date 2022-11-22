@@ -10,7 +10,7 @@ use x11rb::{
 use fontconfig::Fontconfig;
 use freetype::{Library, GlyphSlot, Face};
 use freetype::face::LoadFlag;
-use xmodmap::{KeySym, Modifier};
+use pino_xmodmap::{KeySym, Modifier};
 
 use matsuba::error::{BoxResult, SimpleError};
 

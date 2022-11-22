@@ -15,12 +15,9 @@ path = "src/bin/matsucli/main.rs"
 name = "matsud"
 path = "src/bin/matsud/main.rs"
 
-[workspace]
-members = ["crates/*"]
-
 [dependencies]
-argparse = { git = "https://github.com/MrPicklePinosaur/pino.rs" }
-xmodmap = { path = "crates/xmodmap" }
+pino_argparse = { version = "0.1" }
+pino_xmodmap = { version = "0.1" }
 
 tonic = { version = "0.7", features = [] }
 tokio = { version = "1.18", features = ["rt-multi-thread"] }

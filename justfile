@@ -7,6 +7,9 @@ matsucli:
 matsud:
     cargo run --bin matsud
 
+build:
+    cargo build
+
 check:
     cargo check
 

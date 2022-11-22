@@ -20,11 +20,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08f9b8508dccb7687a1d6c4ce66b2b0ecef467c94667de27d8d7fe1f8d2a9cdc"
 
 [[package]]
-name = "argparse"
-version = "0.1.0"
-source = "git+https://github.com/MrPicklePinosaur/pino.rs#46e184d4a9a545432baedaa7e24f35b1848cfed6"
-
-[[package]]
 name = "async-stream"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -503,9 +498,10 @@ checksum = "73cbba799671b762df5a175adf59ce145165747bb891505c43d09aefbbf38beb"
 name = "matsuba"
 version = "0.1.0"
 dependencies = [
- "argparse",
  "fontconfig",
  "freetype-rs",
+ "pino_argparse",
+ "pino_xmodmap",
  "prost",
  "roxmltree",
  "rusqlite",
@@ -513,7 +509,6 @@ dependencies = [
  "tonic",
  "tonic-build",
  "x11rb",
- "xmodmap",
 ]
 
 [[package]]
@@ -651,6 +646,18 @@ name = "pin-utils"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
+
+[[package]]
+name = "pino_argparse"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "900690173818c00c2a77695f9d391d1b6678ed1f2754e233be7570eee4cd2b71"
+
+[[package]]
+name = "pino_xmodmap"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c14e8d001fcaa7cca4c572ebd7cf15ace8e36f993d19fbeea4a9e101712f9236"
 
 [[package]]
 name = "pkg-config"
@@ -1201,10 +1208,6 @@ name = "xmlparser"
 version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "114ba2b24d2167ef6d67d7d04c8cc86522b87f490025f39f0303b7db5bf5e3d8"
-
-[[package]]
-name = "xmodmap"
-version = "0.1.0"
 
 [[package]]
 name = "yeslogic-fontconfig-sys"

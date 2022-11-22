@@ -9,7 +9,7 @@ use x11rb::{
     },
     rust_connection::RustConnection,
 };
-use xmodmap::{KeyTable, Modifier, KeySym};
+use pino_xmodmap::{KeyTable, Modifier, KeySym};
 use std::process::Command;
 use matsuba::{
     error::{BoxResult, SimpleError},

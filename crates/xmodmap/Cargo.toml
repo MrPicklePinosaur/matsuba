@@ -1,7 +1,0 @@
-[package]
-name = "xmodmap"
-version = "0.1.0"
-edition = "2018"
-authors = ["pinosaur"]
-description = "a tiny xmodmap parsing library"
-repository = "https://github.com/MrPicklePinosaur/matsuba"
