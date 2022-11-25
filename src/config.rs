@@ -1,4 +1,3 @@
-
 // config file for matsuba
 use pino_xmodmap::KeySym;
 

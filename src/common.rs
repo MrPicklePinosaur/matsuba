@@ -1,4 +1,3 @@
-
 use std::collections::HashSet;
 
 // from https://stackoverflow.com/questions/27582739/how-do-i-create-a-hashmap-literal
@@ -11,8 +10,7 @@ macro_rules! hashset {
     }
 }
 pub fn all_tags<'a>() -> HashSet<&'a str> {
-
-    let default_tags: HashSet<&str> = hashset!{
+    let default_tags: HashSet<&str> = hashset! {
         // <dial> (dialect) entities
         "bra", // Brazilian
         "hob", // Hokkaido-ben
@@ -262,4 +260,3 @@ pub fn all_tags<'a>() -> HashSet<&'a str> {
     };
     return default_tags;
 }
-
