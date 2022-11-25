@@ -1,19 +1,17 @@
-
 pub mod matsubaproto {
     tonic::include_proto!("matsubaproto");
 }
-use tonic::Request;
+use log::debug;
 use matsubaproto::matsuba_client::MatsubaClient;
 use matsubaproto::{
-    ConvertRequest, ConvertResponse,
-    GetStateRequest, GetStateResponse,
-    FetchRequest, FetchResponse
+    ConvertRequest, ConvertResponse, FetchRequest, FetchResponse, GetStateRequest, GetStateResponse,
 };
 use pino_argparse::{Cli, Command, Flag, FlagParse};
+use tonic::Request;
 
 use matsuba::{
+    common,
     error::{BoxResult, SimpleError},
-    common
 };
 
 use tokio::runtime::Runtime;
@@ -34,7 +32,6 @@ convert <phrase>
 static CONNECTION_STRING: &str = "http://[::1]:10000";
 
 pub fn runcli() -> BoxResult<()> {
-
     let cli = Cli {
         program_name: "matsucli",
         synopsis: "simple japanese ime",
@@ -55,12 +52,10 @@ pub fn runcli() -> BoxResult<()> {
                 command_name: "fetch",
                 desc: "fetch word lists",
                 handler: handle_fetch,
-                flags: vec![
-                    Flag::new("tags")
-			.short('t')
-                        .desc("specify which tags should be included or not included")
-                        .parameter(),
-                ],
+                flags: vec![Flag::new("tags")
+                    .short('t')
+                    .desc("specify which tags should be included or not included")
+                    .parameter()],
             },
             Command {
                 command_name: "convert",
@@ -68,10 +63,10 @@ pub fn runcli() -> BoxResult<()> {
                 handler: handle_convert,
                 flags: vec![
                     Flag::new("kana")
-			.short('k')
+                        .short('k')
                         .desc("only perform kana conversion"),
                     Flag::new("count")
-			.short('c')
+                        .short('c')
                         .desc("limit for number of conversions to output")
                         .parameter(),
                 ],
@@ -81,17 +76,13 @@ pub fn runcli() -> BoxResult<()> {
                 desc: "query and mutate state of matsuba",
                 handler: handle_state,
                 flags: vec![
-                    Flag::new("henkan")
-			.short('h')
-                        .desc("enable conversion"),
-                    Flag::new("muhenkan")
-                        .short('H')
-                        .desc("disable conversion"),
+                    Flag::new("henkan").short('h').desc("enable conversion"),
+                    Flag::new("muhenkan").short('H').desc("disable conversion"),
                 ],
-            }
+            },
         ],
         global_flags: vec![],
-	..Default::default()
+        ..Default::default()
     };
 
     let args = std::env::args().collect();
@@ -109,18 +100,20 @@ fn handle_unlock(flagparse: FlagParse) -> BoxResult<()> {
 }
 
 fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
-
     if flagparse.args.len() == 0 {
         return Err(Box::new(SimpleError::new("invalid number of args")));
     }
 
     // tag customization
     let mut default_tags = common::all_tags();
-    let tag_options = flagparse.get_flag_value::<String>("tags").unwrap_or(String::new());
+    let tag_options = flagparse
+        .get_flag_value::<String>("tags")
+        .unwrap_or(String::new());
     for option in tag_options.split(",") {
-
         let (mode, tag) = option.split_at(1);
-        if tag.len() == 0 { return Err(Box::new(SimpleError::new("invalid tag"))); }
+        if tag.len() == 0 {
+            return Err(Box::new(SimpleError::new("invalid tag")));
+        }
 
         if mode == "+" {
             default_tags.insert(tag);
@@ -132,40 +125,40 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
     }
 
     // TODO this may be pretty inefficient
-    let tags = default_tags.into_iter().map(|x| x.to_string()).collect::<Vec<String>>();
+    let tags = default_tags
+        .into_iter()
+        .map(|x| x.to_string())
+        .collect::<Vec<String>>();
 
     Runtime::new()?.block_on(async {
-
         let mut client = MatsubaClient::connect(CONNECTION_STRING).await.unwrap();
 
-        let response = client.fetch(Request::new(
-            FetchRequest {
+        let response = client
+            .fetch(Request::new(FetchRequest {
                 tags,
-                database_path: flagparse.args[0].clone()
-            }
-        )).await.unwrap();
-
+                database_path: flagparse.args[0].clone(),
+            }))
+            .await
+            .unwrap();
     });
     Ok(())
 }
 
 fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
-    
     Runtime::new()?.block_on(async {
-
         // TODO proper error handling inside async block
         let mut client = MatsubaClient::connect(CONNECTION_STRING).await.unwrap();
 
-        let response = client.convert(Request::new(
-            ConvertRequest {
+        let response = client
+            .convert(Request::new(ConvertRequest {
                 // TODO only taking first arg for now
                 raw: flagparse.args.get(0).unwrap().to_string(),
                 kana_only: flagparse.get_flag("kana"),
                 result_count: flagparse.get_flag_value::<usize>("count").unwrap_or(1) as i32,
-            }
-        )).await.unwrap();
-        println!("{:?}", response);
-
+            }))
+            .await
+            .unwrap();
+        debug!("{:?}", response);
     });
     Ok(())
 }
@@ -173,4 +166,3 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
 fn handle_state(flagparse: FlagParse) -> BoxResult<()> {
     todo!()
 }
-

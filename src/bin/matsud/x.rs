@@ -1,25 +1,22 @@
-
-use x11rb::{
-    CURRENT_TIME,
-    connection::Connection,
-    protocol::{
-        Event,
-        xproto::*,
-        render::*,
-    },
-    rust_connection::RustConnection,
-};
-use pino_xmodmap::{KeyTable, Modifier, KeySym};
-use std::process::Command;
 use matsuba::{
+    config::{HENKAN_KEY, MUHENKAN_KEY},
     error::{BoxResult, SimpleError},
-    config::{MUHENKAN_KEY, HENKAN_KEY},
+};
+use pino_xmodmap::{KeySym, KeyTable, Modifier};
+use std::process::Command;
+use x11rb::{
+    connection::Connection,
+    protocol::{render::*, xproto::*, Event},
+    rust_connection::RustConnection,
+    CURRENT_TIME,
 };
 
+use super::converter::{Converter, State};
 use super::db;
 use super::db::DBConnection;
-use super::converter::{State, Converter};
-use super::xutils::{create_face, create_glyph, draw_text, x_to_xmodmap_modifier, xmodmap_to_x_modifier};
+use super::xutils::{
+    create_face, create_glyph, draw_text, x_to_xmodmap_modifier, xmodmap_to_x_modifier,
+};
 
 pub struct XSession {
     conn: RustConnection,
@@ -39,9 +36,7 @@ const TEXT_WIDTH: u32 = 10;
 const TEXT_HEIGHT: u32 = 20;
 
 impl XSession {
-
     pub fn new() -> BoxResult<XSession> {
-
         let (conn, screen_num) = x11rb::connect(None)?;
 
         let keytable = KeyTable::new()?;
@@ -59,7 +54,6 @@ impl XSession {
             running: true,
             henkan: true,
         })
-
     }
 
     fn screen(&self) -> &Screen {
@@ -67,7 +61,6 @@ impl XSession {
     }
 
     pub fn run(&mut self) -> BoxResult<()> {
-
         self.configure_root()?;
         while self.is_running() {
             self.render_completion_box()?;
@@ -80,12 +73,16 @@ impl XSession {
     }
 
     fn configure_root(&self) -> BoxResult<()> {
-
         // append to root window attributes
-        let attrs = self.conn.get_window_attributes(self.screen().root)?.reply()?;
+        let attrs = self
+            .conn
+            .get_window_attributes(self.screen().root)?
+            .reply()?;
         let values_list = ChangeWindowAttributesAux::default()
-            .event_mask(attrs.your_event_mask|EventMask::SUBSTRUCTURE_NOTIFY); // TODO this might need to be attrs.all_event_masks
-        self.conn.change_window_attributes(self.screen().root, &values_list)?.check()?;
+            .event_mask(attrs.your_event_mask | EventMask::SUBSTRUCTURE_NOTIFY); // TODO this might need to be attrs.all_event_masks
+        self.conn
+            .change_window_attributes(self.screen().root, &values_list)?
+            .check()?;
 
         self.grab_keyboard()?;
 
@@ -93,9 +90,17 @@ impl XSession {
     }
 
     fn grab_keyboard(&self) -> BoxResult<()> {
-
         // grab user keypresses
-        let grab_status = self.conn.grab_keyboard(false, self.screen().root, CURRENT_TIME, GrabMode::ASYNC, GrabMode::ASYNC)?.reply()?;
+        let grab_status = self
+            .conn
+            .grab_keyboard(
+                false,
+                self.screen().root,
+                CURRENT_TIME,
+                GrabMode::ASYNC,
+                GrabMode::ASYNC,
+            )?
+            .reply()?;
         if grab_status.status != GrabStatus::SUCCESS {
             return Err(Box::new(SimpleError::new("error grabbing keyboard")));
         }
@@ -108,12 +113,20 @@ impl XSession {
 
         let (henkan_mod, henkan_keysym) = self.keytable.get_key(HENKAN_KEY)?;
         let henkan_mod = xmodmap_to_x_modifier(henkan_mod);
-        self.conn.grab_key(true, self.screen().root, henkan_mod, henkan_keysym, GrabMode::ASYNC, GrabMode::ASYNC)?.check()?;
+        self.conn
+            .grab_key(
+                true,
+                self.screen().root,
+                henkan_mod,
+                henkan_keysym,
+                GrabMode::ASYNC,
+                GrabMode::ASYNC,
+            )?
+            .check()?;
         Ok(())
     }
 
     pub fn font_init(&self) -> BoxResult<()> {
-
         let pictformats = query_pict_formats(&self.conn)?.reply()?;
         // TODO hardcoded pictformat for now
         let format = pictformats.formats.iter().find(|f| f.id == 35).unwrap();
@@ -132,7 +145,6 @@ impl XSession {
     }
 
     fn handle_event(&mut self, event: &Event) -> BoxResult<()> {
-
         match event {
             Event::KeyPress(event) => {
                 self.handle_keypress(event)?;
@@ -144,11 +156,12 @@ impl XSession {
     }
 
     fn handle_keypress(&mut self, event: &KeyPressEvent) -> BoxResult<()> {
-
         // extract key press info
         let modifier = x_to_xmodmap_modifier(event.state);
         let keysym = self.keytable.get_keysym(modifier, event.detail);
-        if keysym.is_err() { return Ok(()); }
+        if keysym.is_err() {
+            return Ok(());
+        }
         let keysym = keysym.unwrap();
 
         // key bindings that are active regardless if we are converting
@@ -157,7 +170,7 @@ impl XSession {
                 self.henkan = false;
                 self.ungrab_keyboard()?;
                 return Ok(());
-            },
+            }
             HENKAN_KEY => {
                 self.henkan = true;
                 self.grab_keyboard()?;
@@ -186,7 +199,6 @@ impl XSession {
                 println!("{}", self.completion_box_text);
             }
             KeySym::KEY_ESCAPE => {
-
                 // cancel out of conversion
                 self.conversion_options.clear();
                 self.current_conversion = 0;
@@ -194,17 +206,13 @@ impl XSession {
                 // bring back raw kana
                 self.completion_box_text = self.converter.output.clone();
                 println!("{}", self.completion_box_text);
-
             }
             KeySym::KEY_TAB => {
-
                 if self.conversion_options.len() > 0 {
-
                     // conversion already done, cycle through options
-                    self.current_conversion = (self.current_conversion+1) % (self.conversion_options.len());
-
+                    self.current_conversion =
+                        (self.current_conversion + 1) % (self.conversion_options.len());
                 } else {
-
                     // conversion not done, populate conversion options list
                     let db_conn = db::get_connection()?;
                     let kana = &self.converter.output;
@@ -220,11 +228,14 @@ impl XSession {
                     // set current to beginning
                     self.current_conversion = 0;
                 }
-                self.completion_box_text = self.conversion_options.get(self.current_conversion).unwrap().to_string();
+                self.completion_box_text = self
+                    .conversion_options
+                    .get(self.current_conversion)
+                    .unwrap()
+                    .to_string();
                 println!("{}", self.completion_box_text);
             }
             _ => {
-
                 // if start typing with conversion open, instantly accept
                 if self.conversion_options.len() > 0 {
                     self.output_conversion()?;
@@ -237,7 +248,9 @@ impl XSession {
                 }
 
                 let ch = keysym.as_char();
-                if ch.is_none() { return Ok(()); }
+                if ch.is_none() {
+                    return Ok(());
+                }
                 self.converter.input_char(ch.unwrap());
                 self.completion_box_text = self.converter.output.clone();
                 println!("{}", self.completion_box_text);
@@ -248,7 +261,6 @@ impl XSession {
     }
 
     fn output_conversion(&mut self) -> BoxResult<()> {
-
         println!("accept {}", self.completion_box_text);
 
         // find currently focused window
@@ -257,7 +269,14 @@ impl XSession {
         // TODO this is ugly and also cheating lmao
         self.ungrab_keyboard()?;
         let result = Command::new("xdotool")
-            .args(["type", "--window", &focused_win.to_string(), "--delay", "200", &self.completion_box_text])
+            .args([
+                "type",
+                "--window",
+                &focused_win.to_string(),
+                "--delay",
+                "200",
+                &self.completion_box_text,
+            ])
             .output();
         if result.is_err() {
             println!("errored {:?}", result);
@@ -280,7 +299,6 @@ impl XSession {
     }
 
     pub fn create_completion_box(&mut self, position: (i16, i16)) -> BoxResult<()> {
-
         // create completion box window
         let win = self.conn.generate_id()?;
         let values_list = CreateWindowAux::default()
@@ -307,29 +325,40 @@ impl XSession {
 
     // pub fn render_completion_box(&self, position: (i16, i16), text: &str) -> BoxResult<()> {
     fn render_completion_box(&self) -> BoxResult<()> {
-
-        if self.completion_box.is_none() { return Ok(()); }
+        if self.completion_box.is_none() {
+            return Ok(());
+        }
         let win = self.completion_box.unwrap();
-        
+
         // resize window to fit text
         let values_list = ConfigureWindowAux::default()
-            .width(TEXT_WIDTH*(self.completion_box_text.len() as u32));
+            .width(TEXT_WIDTH * (self.completion_box_text.len() as u32));
         self.conn.configure_window(win, &values_list)?;
 
-        draw_text(&self.conn, &self.screen(), win, TEXT_WIDTH as i16, TEXT_HEIGHT as i16, "mtx", &self.completion_box_text)?;
+        draw_text(
+            &self.conn,
+            &self.screen(),
+            win,
+            TEXT_WIDTH as i16,
+            TEXT_HEIGHT as i16,
+            "mtx",
+            &self.completion_box_text,
+        )?;
         self.conn.map_window(win)?;
 
         Ok(())
     }
 
     fn destroy_completion_box(&mut self) -> BoxResult<()> {
-        if self.completion_box.is_none() { return Ok(()); }
+        if self.completion_box.is_none() {
+            return Ok(());
+        }
         self.conn.destroy_window(self.completion_box.unwrap())?;
         Ok(())
     }
 
     fn send_keypress(&self, win: Window, keysym: KeySym) -> BoxResult<()> {
-    // fn send_keypress(&self, win: Window, keycode: u8, modifier: u16) -> BoxResult<()> {
+        // fn send_keypress(&self, win: Window, keycode: u8, modifier: u16) -> BoxResult<()> {
 
         // get keycode from keymask
         let (modifier, keycode) = self.keytable.get_key(keysym)?;
@@ -350,7 +379,9 @@ impl XSession {
             state: modifier,
             same_screen: true,
         };
-        self.conn.send_event(false, win, EventMask::KEY_PRESS, press_event)?.check()?;
+        self.conn
+            .send_event(false, win, EventMask::KEY_PRESS, press_event)?
+            .check()?;
 
         let release_event = KeyReleaseEvent {
             response_type: KEY_RELEASE_EVENT,
@@ -367,7 +398,9 @@ impl XSession {
             state: modifier,
             same_screen: true,
         };
-        self.conn.send_event(false, win, EventMask::KEY_RELEASE, release_event)?.check()?;
+        self.conn
+            .send_event(false, win, EventMask::KEY_RELEASE, release_event)?
+            .check()?;
 
         Ok(())
     }
@@ -375,6 +408,4 @@ impl XSession {
     pub fn is_running(&self) -> bool {
         return self.running;
     }
-
 }
-

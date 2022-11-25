@@ -1,19 +1,19 @@
-
-mod service;
-mod db;
 mod converter;
+mod db;
+mod service;
 mod x;
-mod xutils;
 mod xmlparse;
+mod xutils;
 
-use x11rb::connection::Connection;
-use tonic::transport::Server;
 use matsuba::error::BoxResult;
+use tonic::transport::Server;
+use x11rb::connection::Connection;
 
-use service::{MatsubaServer, MatsubaService};
+use crate::service::{MatsubaServer, MatsubaService};
 
 #[tokio::main]
 async fn main() -> BoxResult<()> {
+    env_logger::builder().format_timestamp(None).init();
 
     let mut session = x::XSession::new()?;
     session.run()?;

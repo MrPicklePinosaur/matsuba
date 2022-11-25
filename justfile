@@ -1,5 +1,5 @@
 
-default: out
+default: matsud
 
 matsucli:
     cargo run --bin matsucli

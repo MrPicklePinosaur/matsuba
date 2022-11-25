@@ -1,18 +1,17 @@
-
-use std::fmt;
 use std::error::Error;
+use std::fmt;
 
-pub type BoxResult<T> = Result<T,Box<dyn Error>>;
+pub type BoxResult<T> = Result<T, Box<dyn Error>>;
 
 #[derive(Debug)]
 pub struct SimpleError {
-    pub msg: String
+    pub msg: String,
 }
 
 impl SimpleError {
     pub fn new(msg: &str) -> SimpleError {
         SimpleError {
-            msg: msg.to_string()
+            msg: msg.to_string(),
         }
     }
 }
@@ -24,4 +23,3 @@ impl fmt::Display for SimpleError {
         write!(f, "{}", self.msg)
     }
 }
-
