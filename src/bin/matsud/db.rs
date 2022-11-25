@@ -34,7 +34,8 @@ pub fn init(conn: &Connection) -> Result<()> {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             r_ele TEXT NOT NULL,
             k_ele TEXT NOT NULL,
-            frequency INTEGER DEFAULT 0
+            frequency INTEGER DEFAULT 0,
+            last_updated TEXT NOT NULL
         )
         ", []
     )?;
@@ -44,16 +45,27 @@ pub fn init(conn: &Connection) -> Result<()> {
 
 pub fn insert_entry(conn: &Connection, entry: &Entry) -> Result<()> {
 
+    use chrono::{DateTime, Utc};
+    use std::time::SystemTime;
+
+    let now: DateTime<Utc> = SystemTime::now().into();
+    let now = now.to_rfc3339();
+
     conn.execute("
-        INSERT INTO entry (r_ele, k_ele)
-        VALUES (?1, ?2)
-        ", params![entry.r_ele, entry.k_ele]
+        INSERT INTO entry (r_ele, k_ele, last_updated)
+        VALUES (?1, ?2, ?3)
+        ", params![entry.r_ele, entry.k_ele, now]
     )?;
 
     Ok(())
 }
 
-pub fn search(conn: &Connection, reading: &str) -> Result<Vec<Entry>> {
+pub enum SearchHeuristic {
+    None,
+    Frequency,
+    Recent,
+}
+pub fn search(conn: &Connection, reading: &str, heuristic: SearchHeuristic) -> Result<Vec<Entry>> {
 
     let mut query = conn.prepare("
         SELECT r_ele, k_ele, frequency

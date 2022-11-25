@@ -1,6 +1,4 @@
 
-default: out
-
 matsucli:
     cargo run --bin matsucli
 
