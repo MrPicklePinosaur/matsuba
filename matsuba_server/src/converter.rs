@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::collections::LinkedList;
 
-use matsuba::conversion::*;
+use crate::conversion::*;
 
 // TODO ownership in this entire module is fucked, please fix sometime
 

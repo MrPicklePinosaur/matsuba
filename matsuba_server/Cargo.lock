@@ -476,46 +476,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73cbba799671b762df5a175adf59ce145165747bb891505c43d09aefbbf38beb"
 
 [[package]]
-name = "matsuba_cli"
+name = "matsuba"
 version = "0.1.0"
 dependencies = [
  "env_logger",
  "log",
- "matsuba_common",
- "matsuba_grpc",
  "pino_argparse",
- "prost",
- "tokio",
- "tonic",
-]
-
-[[package]]
-name = "matsuba_common"
-version = "0.1.0"
-
-[[package]]
-name = "matsuba_grpc"
-version = "0.1.0"
-dependencies = [
- "prost",
- "tokio",
- "tonic",
- "tonic-build",
-]
-
-[[package]]
-name = "matsuba_server"
-version = "0.1.0"
-dependencies = [
- "env_logger",
- "log",
- "matsuba_common",
- "matsuba_grpc",
+ "pino_xmodmap",
  "prost",
  "roxmltree",
  "rusqlite",
  "tokio",
  "tonic",
+ "tonic-build",
 ]
 
 [[package]]
@@ -617,6 +590,12 @@ name = "pino_argparse"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "900690173818c00c2a77695f9d391d1b6678ed1f2754e233be7570eee4cd2b71"
+
+[[package]]
+name = "pino_xmodmap"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c14e8d001fcaa7cca4c572ebd7cf15ace8e36f993d19fbeea4a9e101712f9236"
 
 [[package]]
 name = "pkg-config"
