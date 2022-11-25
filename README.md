@@ -42,6 +42,14 @@ To run the cli
 just matsucli
 ```
 
+## PROJECT STRUCTURE
+
+The project is broken up into the following crates
+- **matsuba_cli**: end user cli for managing the matsuba daemon as well as for running conversions from the shell
+- **matsuba_server**: edict database wrapper, kana state machine and conversion logic
+- **matsuba_common**: common types and code
+- **matsuba_grpc**: tonic generated sdk for grpc
+
 ## TODO
 
 - [x] get keycodes from xmodmap
@@ -57,9 +65,5 @@ just matsucli
 - [ ] refactor to daemon + cli to manage (rpc calls)
 - [ ] utility cli to do kana conversions + kanji conversions
 - [ ] rewrite matsuba-fetch script as a series of command calls in matsucli
-
-## RESOURCES
-
-couple resources that were used when writing this project
 
 

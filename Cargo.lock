@@ -476,6 +476,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73cbba799671b762df5a175adf59ce145165747bb891505c43d09aefbbf38beb"
 
 [[package]]
+name = "matsuba_cli"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "log",
+ "matsuba_common",
+ "matsuba_grpc",
+ "pino_argparse",
+ "prost",
+ "tokio",
+ "tonic",
+]
+
+[[package]]
 name = "matsuba_common"
 version = "0.1.0"
 
@@ -490,22 +504,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "matsucli"
-version = "0.1.0"
-dependencies = [
- "env_logger",
- "log",
- "matsuba_common",
- "matsuba_grpc",
- "pino_argparse",
- "prost",
- "tokio",
- "tonic",
- "tonic-build",
-]
-
-[[package]]
-name = "matsud"
+name = "matsuba_server"
 version = "0.1.0"
 dependencies = [
  "env_logger",

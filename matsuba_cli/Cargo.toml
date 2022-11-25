@@ -1,11 +1,15 @@
 [package]
-name = "matsucli"
+name = "matsuba_cli"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["MrPicklePinosaur"]
 description = "lightweight japanese ime"
 repository = "https://github.com/MrPicklePinosaur/matsuba"
+
+[[bin]]
+name = "matsucli"
+path = "src/main.rs"
 
 [dependencies]
 pino_argparse = { version = "0.1" }
@@ -25,6 +29,3 @@ prost = { version = "0.10" }
 
 env_logger = "0.9"
 log = "0.4"
-
-[build-dependencies]
-tonic-build = "0.7"

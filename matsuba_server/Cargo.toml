@@ -1,11 +1,15 @@
 [package]
-name = "matsud"
+name = "matsuba_server"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["MrPicklePinosaur"]
 description = "lightweight japanese ime"
 repository = "https://github.com/MrPicklePinosaur/matsuba"
+
+[[bin]]
+name = "matsud"
+path = "src/main.rs"
 
 [dependencies]
 matsuba_common = { path = "../matsuba_common" }

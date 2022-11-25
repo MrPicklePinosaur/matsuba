@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "matsucli",
-    "matsud",
+    "matsuba_cli",
+    "matsuba_server",
     "matsuba_common",
     "matsuba_grpc"
 ]
