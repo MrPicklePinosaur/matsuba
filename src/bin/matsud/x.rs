@@ -14,6 +14,7 @@ use std::process::Command;
 use matsuba::{
     error::{BoxResult, SimpleError},
     config::{MUHENKAN_KEY, HENKAN_KEY},
+    db::SearchHeuristic
 };
 
 use super::db;
@@ -208,7 +209,7 @@ impl XSession {
                     // conversion not done, populate conversion options list
                     let db_conn = db::get_connection()?;
                     let kana = &self.converter.output;
-                    let converted = db::search(&db_conn, kana)?;
+                    let converted = db::search(&db_conn, kana, SearchHeuristic::None)?;
 
                     for entry in converted {
                         self.conversion_options.push(entry.k_ele);

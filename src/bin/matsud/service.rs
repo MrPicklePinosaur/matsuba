@@ -14,7 +14,7 @@ use tonic::{Request, Response, Status, Code};
 use std::collections::HashSet;
 
 use super::{
-    db,
+    db::SearchHeuristic,
     x,
     xmlparse,
     converter::{Converter, build_dfa},
@@ -56,7 +56,7 @@ impl Matsuba for MatsubaService {
             return Ok(Response::new(ConvertResponse{converted: vec!(kana)}));
         }
 
-        let converted = db::search(&conn, &kana)
+        let converted = db::search(&conn, &kana, SearchHeuristic::None)
             .or(Err(Status::new(Code::Internal, "error querying database")))?
             .iter()
             .take(request.result_count as usize)
