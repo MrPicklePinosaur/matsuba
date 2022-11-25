@@ -1,10 +1,6 @@
-pub mod matsubaproto {
-    tonic::include_proto!("matsubaproto");
-}
-
-use matsubaproto::matsuba_server::Matsuba;
-pub use matsubaproto::matsuba_server::MatsubaServer;
-use matsubaproto::{
+use matsuba_grpc::matsuba_server::Matsuba;
+pub use matsuba_grpc::matsuba_server::MatsubaServer;
+use matsuba_grpc::{
     ConvertRequest, ConvertResponse, FetchRequest, FetchResponse, GetStateRequest, GetStateResponse,
 };
 use std::collections::HashSet;
@@ -12,7 +8,7 @@ use tonic::{Code, Request, Response, Status};
 
 use super::{
     converter::{build_dfa, Converter},
-    db, x, xmlparse,
+    db, xmlparse,
 };
 
 pub struct MatsubaService {

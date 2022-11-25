@@ -1,20 +1,40 @@
-pub mod matsubaproto {
-    tonic::include_proto!("matsubaproto");
-}
 use log::debug;
-use matsubaproto::matsuba_client::MatsubaClient;
-use matsubaproto::{
+use matsuba_grpc::matsuba_client::MatsubaClient;
+use matsuba_grpc::{
     ConvertRequest, ConvertResponse, FetchRequest, FetchResponse, GetStateRequest, GetStateResponse,
 };
 use pino_argparse::{Cli, Command, Flag, FlagParse};
 use tonic::Request;
 
-use matsuba::{
-    common,
-    error::{BoxResult, SimpleError},
-};
-
 use tokio::runtime::Runtime;
+
+use matsuba_common::*;
+
+use std::error::Error;
+use std::fmt;
+
+pub type BoxResult<T> = Result<T, Box<dyn Error>>;
+
+#[derive(Debug)]
+pub struct SimpleError {
+    pub msg: String,
+}
+
+impl SimpleError {
+    pub fn new(msg: &str) -> SimpleError {
+        SimpleError {
+            msg: msg.to_string(),
+        }
+    }
+}
+
+impl Error for SimpleError {}
+
+impl fmt::Display for SimpleError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.msg)
+    }
+}
 
 static HELP_MSG: &str = "\
 USAGE:
@@ -105,7 +125,7 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
     }
 
     // tag customization
-    let mut default_tags = common::all_tags();
+    let mut default_tags = matsuba_common::all_tags();
     let tag_options = flagparse
         .get_flag_value::<String>("tags")
         .unwrap_or(String::new());

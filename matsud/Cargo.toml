@@ -1,0 +1,29 @@
+[package]
+name = "matsud"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["MrPicklePinosaur"]
+description = "lightweight japanese ime"
+repository = "https://github.com/MrPicklePinosaur/matsuba"
+
+[dependencies]
+matsuba_common = { path = "../matsuba_common" }
+matsuba_grpc = { path = "../matsuba_grpc" }
+
+tonic = { version = "0.7", features = [] }
+tokio = { version = "1.18", features = ["rt-multi-thread"] }
+prost = { version = "0.10" }
+
+# x11rb = { version = "0.9.0", features = ["render"] }
+# fontconfig = { version = "0.5.0" }
+# freetype-rs = { version = "0.29.1" }
+rusqlite = { version = "0.27.0", features = ["bundled"] }
+roxmltree = { version = "0.14.1" }
+
+# wgpu = "0.14"
+# wgpu_glyph = "0.18"
+# winit = "0.27"
+
+env_logger = "0.9"
+log = "0.4"

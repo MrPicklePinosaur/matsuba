@@ -1,0 +1,16 @@
+[package]
+name = "matsuba_grpc"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["MrPicklePinosaur"]
+description = "lightweight japanese ime"
+repository = "https://github.com/MrPicklePinosaur/matsuba"
+
+[dependencies]
+tonic = { version = "0.7", features = [] }
+tokio = { version = "1.18", features = ["rt-multi-thread"] }
+prost = { version = "0.10" }
+
+[build-dependencies]
+tonic-build = "0.7"

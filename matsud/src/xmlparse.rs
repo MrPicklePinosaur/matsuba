@@ -7,7 +7,8 @@ use log::debug;
 
 use super::db::insert_entry;
 use super::db::{DBConnection, Entry};
-use matsuba::error::{BoxResult, SimpleError};
+
+use crate::error::{BoxResult, SimpleError};
 
 pub fn parse_jmdict_xml(
     conn: &mut DBConnection,

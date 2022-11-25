@@ -9,6 +9,8 @@ macro_rules! hashset {
         }
     }
 }
+
+// TODO this could be lazy_static
 pub fn all_tags<'a>() -> HashSet<&'a str> {
     let default_tags: HashSet<&str> = hashset! {
         // <dial> (dialect) entities

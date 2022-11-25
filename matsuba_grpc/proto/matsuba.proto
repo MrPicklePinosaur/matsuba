@@ -1,7 +1,7 @@
 
 syntax = "proto3";
 
-package matsubaproto;
+package matsuba_grpc;
 
 message ConvertRequest {
     string raw = 1;
