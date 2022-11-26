@@ -6,5 +6,4 @@ members = [
     "matsuba_server",
     "matsuba_common",
     "matsuba_grpc",
-    "matsuba_ime",
 ]

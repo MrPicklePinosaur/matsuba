@@ -1,3 +1,6 @@
+pub mod conversion;
+pub mod converter;
+
 use std::collections::HashSet;
 
 // from https://stackoverflow.com/questions/27582739/how-do-i-create-a-hashmap-literal

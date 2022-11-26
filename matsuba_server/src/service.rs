@@ -6,10 +6,9 @@ use matsuba_grpc::{
 use std::collections::HashSet;
 use tonic::{Code, Request, Response, Status};
 
-use super::{
-    converter::{build_dfa, Converter},
-    db, xmlparse,
-};
+use matsuba_common::converter::{build_dfa, Converter};
+
+use super::{db, xmlparse};
 
 pub struct MatsubaService {
     // pub xsession: x::XSession

@@ -2,11 +2,13 @@ use log::debug;
 use wgpu::include_wgsl;
 use winit::{
     dpi::PhysicalPosition,
-    event::*,
+    event::{ElementState, *},
     event_loop::{ControlFlow, EventLoop},
     platform::unix::WindowBuilderExtUnix,
     window::{Window, WindowBuilder},
 };
+
+use matsuba_common::converter::Converter;
 
 struct State {
     surface: wgpu::Surface,
@@ -160,8 +162,23 @@ impl State {
     }
 }
 
-async fn run() {
-    env_logger::init();
+struct IMEState {
+    selected_conversion: usize,
+    conversions: Vec<String>,
+    henkan: bool,
+}
+
+impl IMEState {
+    pub fn new() -> Self {
+        IMEState {
+            selected_conversion: 0,
+            conversions: vec![],
+            henkan: false,
+        }
+    }
+}
+
+pub async fn run() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         // .with_position(position)
@@ -175,6 +192,9 @@ async fn run() {
         .unwrap();
 
     let mut state = State::new(&window).await;
+
+    let mut ime_state = IMEState::new();
+    let mut converter = Converter::new();
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
@@ -214,16 +234,47 @@ async fn run() {
         Event::DeviceEvent { device_id, event } => {
             // events that are recieved regardless of focus
             match event {
-                DeviceEvent::Key(kb_input) => {
-                    println!("DeviceInput Key {:?}", kb_input);
+                DeviceEvent::Key(KeyboardInput {
+                    state,
+                    virtual_keycode,
+                    modifiers,
+                    ..
+                }) if state == ElementState::Pressed => {
+                    if let Some(virtual_keycode) = virtual_keycode {
+                        match virtual_keycode {
+                            VirtualKeyCode::Return => {
+                                converter.accept();
+                                ime_state.conversions.clear();
+                                ime_state.selected_conversion = 0;
+                            }
+                            VirtualKeyCode::Back => {
+                                converter.del_char();
+                            }
+                            VirtualKeyCode::Escape => {
+                                // cancel out of conversion
+                                ime_state.conversions.clear();
+                                ime_state.selected_conversion = 0;
+                            }
+                            VirtualKeyCode::Tab if !modifiers.shift() => {
+                                // cycle conversions
+                                ime_state.selected_conversion = (ime_state.selected_conversion + 1)
+                                    % (ime_state.conversions.len());
+                            }
+                            VirtualKeyCode::Tab if modifiers.shift() => {
+                                ime_state.selected_conversion = (ime_state.selected_conversion - 1)
+                                    % (ime_state.conversions.len());
+                            }
+                            _ => {
+                                // otherwise feed input directly to converter
+                                // ime_state.converter.input_char(ch);
+                            }
+                        }
+                    };
+                    // println!("DeviceInput Key {:?}", kb_input);
                 }
                 _ => {}
             }
         }
         _ => {}
     });
-}
-
-fn main() {
-    pollster::block_on(run());
 }
