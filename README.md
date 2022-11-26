@@ -49,6 +49,7 @@ The project is broken up into the following crates
 - **matsuba_server**: edict database wrapper, kana state machine and conversion logic
 - **matsuba_common**: common types and code
 - **matsuba_grpc**: tonic generated sdk for grpc
+- **matsuba_ime**: graphical wgpu-based frontend for displaying completions
 
 ## TODO
 

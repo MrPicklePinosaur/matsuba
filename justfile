@@ -7,6 +7,9 @@ matsucli:
 matsud:
     cargo run --bin matsud
 
+matsuime:
+    cargo run --bin matsuime
+
 build:
     cargo build
 

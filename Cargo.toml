@@ -1,7 +1,10 @@
 [workspace]
+resolver = "2"
+version = "2021"
 members = [
     "matsuba_cli",
     "matsuba_server",
     "matsuba_common",
-    "matsuba_grpc"
+    "matsuba_grpc",
+    "matsuba_ime",
 ]
