@@ -10,7 +10,8 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use gui::State;
+use crate::db;
+use crate::renderer::gui::State;
 
 use matsuba_common::converter::Converter;
 
@@ -100,6 +101,8 @@ pub async fn run() {
                                 converter.accept();
                                 ime_state.conversions.clear();
                                 ime_state.selected_conversion = 0;
+
+                                gui_state.output = String::new();
                             }
                             VirtualKeyCode::Back => {
                                 converter.del_char();
@@ -110,21 +113,45 @@ pub async fn run() {
                                 // cancel out of conversion
                                 ime_state.conversions.clear();
                                 ime_state.selected_conversion = 0;
+
+                                // bring back raw kana
+                                gui_state.output = converter.output.clone();
                             }
-                            VirtualKeyCode::Tab if !modifiers.shift() => {
-                                // cycle conversions
+                            VirtualKeyCode::Tab => {
+                                // conversion already done, cycle through options
                                 if ime_state.conversions.len() > 0 {
-                                    ime_state.selected_conversion = (ime_state.selected_conversion
-                                        + 1)
-                                        % (ime_state.conversions.len());
+                                    if !modifiers.shift() {
+                                        ime_state.selected_conversion =
+                                            (ime_state.selected_conversion + 1)
+                                                % (ime_state.conversions.len());
+                                    } else {
+                                        ime_state.selected_conversion =
+                                            (ime_state.selected_conversion - 1)
+                                                % (ime_state.conversions.len());
+                                    };
+                                    info!("new index {}", ime_state.selected_conversion);
+                                } else {
+                                    // conversion not done, populate conversion options list
+                                    let db_conn = db::get_connection().unwrap();
+                                    let kana = &converter.output;
+                                    let converted = db::search(&db_conn, kana).unwrap();
+
+                                    for entry in converted {
+                                        ime_state.conversions.push(entry.k_ele);
+                                    }
+
+                                    // always push exactly what we typed
+                                    ime_state.conversions.push(kana.clone());
+
+                                    // set current to beginning
+                                    ime_state.selected_conversion = 0;
+                                    info!("conversions {:?}", ime_state.conversions);
                                 }
-                            }
-                            VirtualKeyCode::Tab if modifiers.shift() => {
-                                if ime_state.conversions.len() > 0 {
-                                    ime_state.selected_conversion = (ime_state.selected_conversion
-                                        - 1)
-                                        % (ime_state.conversions.len());
-                                }
+                                gui_state.output = ime_state
+                                    .conversions
+                                    .get(ime_state.selected_conversion)
+                                    .unwrap()
+                                    .to_string();
                             }
                             _ => {
                                 // otherwise feed input directly to converter
