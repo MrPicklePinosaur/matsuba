@@ -2,10 +2,10 @@
 default: matsud
 
 matsucli:
-    cargo run --bin matsucli
+    RUST_LOG=info cargo run --bin matsucli
 
 matsud:
-    cargo run --bin matsud
+    RUST_LOG=info cargo run --bin matsud
 
 build:
     cargo build

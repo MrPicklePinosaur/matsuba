@@ -1,8 +1,8 @@
-use log::debug;
+use log::{debug, info};
 use wgpu::include_wgsl;
 use winit::{
     dpi::PhysicalPosition,
-    event::{ElementState, *},
+    event::{ElementState, ModifiersState, *},
     event_loop::{ControlFlow, EventLoop},
     platform::unix::WindowBuilderExtUnix,
     window::{Window, WindowBuilder},
@@ -243,6 +243,8 @@ pub async fn run() {
                     if let Some(virtual_keycode) = virtual_keycode {
                         match virtual_keycode {
                             VirtualKeyCode::Return => {
+                                info!("accepting: {}", converter.output);
+
                                 converter.accept();
                                 ime_state.conversions.clear();
                                 ime_state.selected_conversion = 0;
@@ -257,16 +259,25 @@ pub async fn run() {
                             }
                             VirtualKeyCode::Tab if !modifiers.shift() => {
                                 // cycle conversions
-                                ime_state.selected_conversion = (ime_state.selected_conversion + 1)
-                                    % (ime_state.conversions.len());
+                                if ime_state.conversions.len() > 0 {
+                                    ime_state.selected_conversion = (ime_state.selected_conversion
+                                        + 1)
+                                        % (ime_state.conversions.len());
+                                }
                             }
                             VirtualKeyCode::Tab if modifiers.shift() => {
-                                ime_state.selected_conversion = (ime_state.selected_conversion - 1)
-                                    % (ime_state.conversions.len());
+                                if ime_state.conversions.len() > 0 {
+                                    ime_state.selected_conversion = (ime_state.selected_conversion
+                                        - 1)
+                                        % (ime_state.conversions.len());
+                                }
                             }
                             _ => {
                                 // otherwise feed input directly to converter
-                                // ime_state.converter.input_char(ch);
+                                if let Some(c) = virtual_to_char(virtual_keycode, modifiers) {
+                                    converter.input_char(c);
+                                    info!("inputted {:?}", converter.output);
+                                }
                             }
                         }
                     };
@@ -277,4 +288,71 @@ pub async fn run() {
         }
         _ => {}
     });
+}
+
+fn virtual_to_char(k: VirtualKeyCode, m: ModifiersState) -> Option<char> {
+    let byte = if !m.shift() {
+        match k {
+            VirtualKeyCode::A => 0x61,
+            VirtualKeyCode::B => 0x62,
+            VirtualKeyCode::C => 0x63,
+            VirtualKeyCode::D => 0x64,
+            VirtualKeyCode::E => 0x65,
+            VirtualKeyCode::F => 0x66,
+            VirtualKeyCode::G => 0x67,
+            VirtualKeyCode::H => 0x68,
+            VirtualKeyCode::I => 0x69,
+            VirtualKeyCode::J => 0x6a,
+            VirtualKeyCode::K => 0x6b,
+            VirtualKeyCode::L => 0x6c,
+            VirtualKeyCode::M => 0x6d,
+            VirtualKeyCode::N => 0x6e,
+            VirtualKeyCode::O => 0x6f,
+            VirtualKeyCode::P => 0x70,
+            VirtualKeyCode::Q => 0x71,
+            VirtualKeyCode::R => 0x72,
+            VirtualKeyCode::S => 0x73,
+            VirtualKeyCode::T => 0x74,
+            VirtualKeyCode::U => 0x75,
+            VirtualKeyCode::V => 0x76,
+            VirtualKeyCode::W => 0x77,
+            VirtualKeyCode::X => 0x78,
+            VirtualKeyCode::Y => 0x79,
+            VirtualKeyCode::Z => 0x7a,
+            _ => 0x00,
+        }
+    } else if m.shift() {
+        match k {
+            VirtualKeyCode::A => 0x41,
+            VirtualKeyCode::B => 0x42,
+            VirtualKeyCode::C => 0x43,
+            VirtualKeyCode::D => 0x44,
+            VirtualKeyCode::E => 0x45,
+            VirtualKeyCode::F => 0x46,
+            VirtualKeyCode::G => 0x47,
+            VirtualKeyCode::H => 0x48,
+            VirtualKeyCode::I => 0x49,
+            VirtualKeyCode::J => 0x4a,
+            VirtualKeyCode::K => 0x4b,
+            VirtualKeyCode::L => 0x4c,
+            VirtualKeyCode::M => 0x4d,
+            VirtualKeyCode::N => 0x4e,
+            VirtualKeyCode::O => 0x4f,
+            VirtualKeyCode::P => 0x50,
+            VirtualKeyCode::Q => 0x51,
+            VirtualKeyCode::R => 0x52,
+            VirtualKeyCode::S => 0x53,
+            VirtualKeyCode::T => 0x54,
+            VirtualKeyCode::U => 0x55,
+            VirtualKeyCode::V => 0x56,
+            VirtualKeyCode::W => 0x57,
+            VirtualKeyCode::X => 0x58,
+            VirtualKeyCode::Y => 0x59,
+            VirtualKeyCode::Z => 0x5a,
+            _ => 0x00,
+        }
+    } else {
+        0x00
+    };
+    char::from_u32(byte)
 }
