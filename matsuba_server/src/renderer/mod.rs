@@ -3,7 +3,7 @@ mod gui;
 use log::{debug, info};
 use wgpu::include_wgsl;
 use winit::{
-    dpi::PhysicalPosition,
+    dpi::{LogicalSize, PhysicalPosition},
     event::{ElementState, ModifiersState, *},
     event_loop::{ControlFlow, EventLoop},
     platform::unix::WindowBuilderExtUnix,
@@ -35,12 +35,13 @@ pub async fn run() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         // .with_position(position)
-        // .with_inner_size(size)
+        .with_inner_size(LogicalSize::new(300.0, 30.0))
         .with_title("highgui")
         .with_decorations(false)
         .with_always_on_top(true)
         .with_resizable(false)
         .with_override_redirect(true)
+        .with_visible(false)
         .build(&event_loop)
         .unwrap();
 
@@ -103,6 +104,7 @@ pub async fn run() {
                                 ime_state.selected_conversion = 0;
 
                                 gui_state.output = String::new();
+                                window.set_visible(false);
                             }
                             VirtualKeyCode::Back => {
                                 converter.del_char();
@@ -159,6 +161,12 @@ pub async fn run() {
                                     converter.input_char(c);
                                     gui_state.output = converter.output.clone();
                                     info!("inputted {:?}", converter.output);
+
+                                    // we changed input so clear conversions
+                                    ime_state.conversions.clear();
+
+                                    // show completion box
+                                    window.set_visible(true);
                                 }
                             }
                         }
@@ -226,7 +234,7 @@ fn virtual_to_char(k: VirtualKeyCode, m: ModifiersState) -> Option<char> {
         VirtualKeyCode::X if m.shift() => 0x58,
         VirtualKeyCode::Y if m.shift() => 0x59,
         VirtualKeyCode::Z if m.shift() => 0x5a,
-        _ => 0x00,
+        _ => return None,
     };
     char::from_u32(byte)
 }

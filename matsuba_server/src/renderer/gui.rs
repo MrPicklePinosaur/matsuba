@@ -136,7 +136,7 @@ impl State {
         drop(render_pass);
 
         self.glyph_brush.queue(wgpu_glyph::Section {
-            screen_position: (30., 30.),
+            screen_position: (0., 0.),
             bounds: (self.size.width as f32, self.size.height as f32),
             text: vec![wgpu_glyph::Text::new(&self.output)
                 .with_color([1.0, 1.0, 1.0, 1.0])
