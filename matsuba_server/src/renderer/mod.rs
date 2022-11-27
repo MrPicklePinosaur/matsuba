@@ -11,8 +11,11 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use crate::db;
 use crate::renderer::gui::State;
+use crate::{
+    config::{HENKAN_KEY, MUHENKAN_KEY},
+    db,
+};
 
 use matsuba_common::converter::Converter;
 
@@ -96,87 +99,110 @@ pub async fn run() {
                     ..
                 }) if state == ElementState::Pressed => {
                     if let Some(virtual_keycode) = virtual_keycode {
-                        match virtual_keycode {
-                            VirtualKeyCode::Return => {
-                                info!("accepting: {}", converter.output);
-
-                                converter.accept();
-                                ime_state.conversions.clear();
-                                gui_state.conversions.clear();
-                                ime_state.selected_conversion = 0;
-
-                                gui_state.output = String::new();
-                                window.set_visible(false);
-                            }
-                            VirtualKeyCode::Back => {
-                                converter.del_char();
-                                gui_state.output = converter.output.clone();
-                                info!("deleted {:?}", converter.output);
-                            }
-                            VirtualKeyCode::Escape => {
-                                // cancel out of conversion
-                                ime_state.conversions.clear();
-                                gui_state.conversions.clear();
-                                ime_state.selected_conversion = 0;
-
-                                // bring back raw kana
-                                gui_state.output = converter.output.clone();
-                            }
-                            VirtualKeyCode::Tab => {
-                                // conversion already done, cycle through options
-                                if ime_state.conversions.len() > 0 {
-                                    if !modifiers.shift() {
-                                        ime_state.selected_conversion =
-                                            (ime_state.selected_conversion + 1)
-                                                % (ime_state.conversions.len());
-                                    } else {
-                                        ime_state.selected_conversion = (ime_state
-                                            .selected_conversion
-                                            + ime_state.conversions.len()
-                                            - 1)
-                                            % (ime_state.conversions.len());
-                                    };
-                                    info!("new index {}", ime_state.selected_conversion);
-                                } else {
-                                    // conversion not done, populate conversion options list
-                                    let db_conn = db::get_connection().unwrap();
-                                    let kana = &converter.output;
-                                    let converted = db::search(&db_conn, kana).unwrap();
-
-                                    for entry in converted {
-                                        ime_state.conversions.push(entry.k_ele);
-                                    }
-
-                                    // always push exactly what we typed
-                                    // TODO having duplicate ime_state.conversions and gui_state.conversions is very bad
-                                    ime_state.conversions.push(kana.clone());
-                                    gui_state.conversions = ime_state.conversions.clone();
-
-                                    // set current to beginning
-                                    ime_state.selected_conversion = 0;
-                                    info!("conversions {:?}", ime_state.conversions);
+                        if !ime_state.henkan {
+                            match virtual_keycode {
+                                HENKAN_KEY => {
+                                    info!("henkan");
+                                    ime_state.henkan = true;
                                 }
-                                gui_state.output = ime_state
-                                    .conversions
-                                    .get(ime_state.selected_conversion)
-                                    .unwrap()
-                                    .to_string();
-                                update_size(&gui_state, &window);
+                                _ => {}
                             }
-                            _ => {
-                                // otherwise feed input directly to converter
-                                if let Some(c) = virtual_to_char(virtual_keycode, modifiers) {
-                                    converter.input_char(c);
-                                    gui_state.output = converter.output.clone();
-                                    info!("inputted {:?}", converter.output);
+                        } else {
+                            match virtual_keycode {
+                                MUHENKAN_KEY => {
+                                    info!("muhenkan");
+                                    ime_state.henkan = false;
 
-                                    // we changed input so clear conversions
+                                    // TOOD duplicate of return rn
+                                    converter.accept();
                                     ime_state.conversions.clear();
                                     gui_state.conversions.clear();
+                                    ime_state.selected_conversion = 0;
 
-                                    // show completion box
-                                    window.set_visible(true);
+                                    gui_state.output = String::new();
+                                    window.set_visible(false);
+                                }
+                                VirtualKeyCode::Return => {
+                                    info!("accepting: {}", converter.output);
+
+                                    converter.accept();
+                                    ime_state.conversions.clear();
+                                    gui_state.conversions.clear();
+                                    ime_state.selected_conversion = 0;
+
+                                    gui_state.output = String::new();
+                                    window.set_visible(false);
+                                }
+                                VirtualKeyCode::Back => {
+                                    converter.del_char();
+                                    gui_state.output = converter.output.clone();
+                                    info!("deleted {:?}", converter.output);
+                                }
+                                VirtualKeyCode::Escape => {
+                                    // cancel out of conversion
+                                    ime_state.conversions.clear();
+                                    gui_state.conversions.clear();
+                                    ime_state.selected_conversion = 0;
+
+                                    // bring back raw kana
+                                    gui_state.output = converter.output.clone();
+                                }
+                                VirtualKeyCode::Tab => {
+                                    // conversion already done, cycle through options
+                                    if ime_state.conversions.len() > 0 {
+                                        if !modifiers.shift() {
+                                            ime_state.selected_conversion =
+                                                (ime_state.selected_conversion + 1)
+                                                    % (ime_state.conversions.len());
+                                        } else {
+                                            ime_state.selected_conversion = (ime_state
+                                                .selected_conversion
+                                                + ime_state.conversions.len()
+                                                - 1)
+                                                % (ime_state.conversions.len());
+                                        };
+                                        info!("new index {}", ime_state.selected_conversion);
+                                    } else {
+                                        // conversion not done, populate conversion options list
+                                        let db_conn = db::get_connection().unwrap();
+                                        let kana = &converter.output;
+                                        let converted = db::search(&db_conn, kana).unwrap();
+
+                                        for entry in converted {
+                                            ime_state.conversions.push(entry.k_ele);
+                                        }
+
+                                        // always push exactly what we typed
+                                        // TODO having duplicate ime_state.conversions and gui_state.conversions is very bad
+                                        ime_state.conversions.push(kana.clone());
+                                        gui_state.conversions = ime_state.conversions.clone();
+
+                                        // set current to beginning
+                                        ime_state.selected_conversion = 0;
+                                        info!("conversions {:?}", ime_state.conversions);
+                                    }
+                                    gui_state.output = ime_state
+                                        .conversions
+                                        .get(ime_state.selected_conversion)
+                                        .unwrap()
+                                        .to_string();
                                     update_size(&gui_state, &window);
+                                }
+                                _ => {
+                                    // otherwise feed input directly to converter
+                                    if let Some(c) = virtual_to_char(virtual_keycode, modifiers) {
+                                        converter.input_char(c);
+                                        gui_state.output = converter.output.clone();
+                                        info!("inputted {:?}", converter.output);
+
+                                        // we changed input so clear conversions
+                                        ime_state.conversions.clear();
+                                        gui_state.conversions.clear();
+
+                                        // show completion box
+                                        window.set_visible(true);
+                                        update_size(&gui_state, &window);
+                                    }
                                 }
                             }
                         }

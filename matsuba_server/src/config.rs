@@ -1,7 +1,6 @@
 // config file for matsuba
-// use pino_xmodmap::KeySym;
+use winit::event::VirtualKeyCode;
 
-pub static CACHE_DIR: &str = ".cache/matsuba";
-pub static COMPLETION_BOX_HEIGHT: u16 = 40;
-// pub const MUHENKAN_KEY: KeySym = KeySym::KEY_9;
-// pub const HENKAN_KEY: KeySym = KeySym::KEY_0;
+pub static CACHE_DIR: &str = ".cache/matsuba"; // where the database file goes
+pub const MUHENKAN_KEY: VirtualKeyCode = VirtualKeyCode::Key9;
+pub const HENKAN_KEY: VirtualKeyCode = VirtualKeyCode::Key0;
