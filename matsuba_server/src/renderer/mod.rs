@@ -2,8 +2,9 @@ mod gui;
 
 use log::{debug, info};
 use wgpu::include_wgsl;
+use wgpu_glyph::ab_glyph::{Font, FontArc, ScaleFont};
 use winit::{
-    dpi::{LogicalSize, PhysicalPosition},
+    dpi::{LogicalSize, PhysicalPosition, PhysicalSize},
     event::{ElementState, ModifiersState, *},
     event_loop::{ControlFlow, EventLoop},
     platform::unix::WindowBuilderExtUnix,
@@ -101,6 +102,7 @@ pub async fn run() {
 
                                 converter.accept();
                                 ime_state.conversions.clear();
+                                gui_state.conversions.clear();
                                 ime_state.selected_conversion = 0;
 
                                 gui_state.output = String::new();
@@ -114,6 +116,7 @@ pub async fn run() {
                             VirtualKeyCode::Escape => {
                                 // cancel out of conversion
                                 ime_state.conversions.clear();
+                                gui_state.conversions.clear();
                                 ime_state.selected_conversion = 0;
 
                                 // bring back raw kana
@@ -127,9 +130,11 @@ pub async fn run() {
                                             (ime_state.selected_conversion + 1)
                                                 % (ime_state.conversions.len());
                                     } else {
-                                        ime_state.selected_conversion =
-                                            (ime_state.selected_conversion - 1)
-                                                % (ime_state.conversions.len());
+                                        ime_state.selected_conversion = (ime_state
+                                            .selected_conversion
+                                            + ime_state.conversions.len()
+                                            - 1)
+                                            % (ime_state.conversions.len());
                                     };
                                     info!("new index {}", ime_state.selected_conversion);
                                 } else {
@@ -143,7 +148,9 @@ pub async fn run() {
                                     }
 
                                     // always push exactly what we typed
+                                    // TODO having duplicate ime_state.conversions and gui_state.conversions is very bad
                                     ime_state.conversions.push(kana.clone());
+                                    gui_state.conversions = ime_state.conversions.clone();
 
                                     // set current to beginning
                                     ime_state.selected_conversion = 0;
@@ -154,6 +161,7 @@ pub async fn run() {
                                     .get(ime_state.selected_conversion)
                                     .unwrap()
                                     .to_string();
+                                update_size(&gui_state, &window);
                             }
                             _ => {
                                 // otherwise feed input directly to converter
@@ -164,9 +172,11 @@ pub async fn run() {
 
                                     // we changed input so clear conversions
                                     ime_state.conversions.clear();
+                                    gui_state.conversions.clear();
 
                                     // show completion box
                                     window.set_visible(true);
+                                    update_size(&gui_state, &window);
                                 }
                             }
                         }
@@ -176,6 +186,23 @@ pub async fn run() {
             }
         }
         _ => {}
+    });
+}
+
+fn update_size(gui_state: &State, window: &Window) {
+    let scaled_font = gui_state.font.as_scaled(gui_state.font_scale);
+
+    // let min_font_size = scaled_font.h_advance(gui_state.font.glyph_id('あ')); // value of 27.62431
+
+    // calculate max horizontal
+    let total_width = 300.;
+
+    // calculate max vertical
+    let total_height = scaled_font.height() * (gui_state.conversions.len() as f32 + 1.0);
+
+    window.set_inner_size(PhysicalSize {
+        width: total_width,
+        height: total_height,
     });
 }
 
