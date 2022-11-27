@@ -1,7 +1,8 @@
 use log::{debug, info};
 use wgpu::include_wgsl;
+use wgpu_glyph::ab_glyph::{Font, FontArc, ScaleFont};
 use winit::{
-    dpi::PhysicalPosition,
+    dpi::{PhysicalPosition, PhysicalSize},
     event::{ElementState, ModifiersState, *},
     event_loop::{ControlFlow, EventLoop},
     platform::unix::WindowBuilderExtUnix,
@@ -15,9 +16,12 @@ pub struct State {
     config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
     staging_belt: wgpu::util::StagingBelt,
+    pub font: FontArc,
+    pub font_scale: f32,
     glyph_brush: wgpu_glyph::GlyphBrush<()>,
 
     pub output: String,
+    pub conversions: Vec<String>,
 }
 
 impl State {
@@ -75,7 +79,7 @@ impl State {
         ))
         .expect("could not load font");
         let glyph_brush =
-            wgpu_glyph::GlyphBrushBuilder::using_font(font).build(&device, render_format);
+            wgpu_glyph::GlyphBrushBuilder::using_font(font.clone()).build(&device, render_format);
 
         Self {
             surface,
@@ -84,9 +88,12 @@ impl State {
             config,
             size,
             staging_belt: wgpu::util::StagingBelt::new(1024),
+            font,
+            font_scale: 40.0,
             glyph_brush,
 
             output: String::new(),
+            conversions: vec![],
         }
     }
 
@@ -135,14 +142,28 @@ impl State {
         });
         drop(render_pass);
 
+        // draw selected text
         self.glyph_brush.queue(wgpu_glyph::Section {
             screen_position: (0., 0.),
             bounds: (self.size.width as f32, self.size.height as f32),
             text: vec![wgpu_glyph::Text::new(&self.output)
                 .with_color([1.0, 1.0, 1.0, 1.0])
-                .with_scale(40.)],
+                .with_scale(self.font_scale)],
             ..wgpu_glyph::Section::default()
         });
+
+        // draw all completions
+        let scaled_font = self.font.as_scaled(self.font_scale);
+        for (i, conversion) in self.conversions.iter().enumerate() {
+            self.glyph_brush.queue(wgpu_glyph::Section {
+                screen_position: (0., scaled_font.height() * ((i as f32) + 1.)),
+                bounds: (self.size.width as f32, self.size.height as f32),
+                text: vec![wgpu_glyph::Text::new(conversion)
+                    .with_color([1.0, 1.0, 1.0, 1.0])
+                    .with_scale(self.font_scale)],
+                ..wgpu_glyph::Section::default()
+            });
+        }
 
         self.glyph_brush
             .draw_queued(
