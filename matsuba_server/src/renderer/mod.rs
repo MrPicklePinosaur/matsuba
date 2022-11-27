@@ -130,9 +130,11 @@ pub async fn run() {
                                             (ime_state.selected_conversion + 1)
                                                 % (ime_state.conversions.len());
                                     } else {
-                                        ime_state.selected_conversion =
-                                            (ime_state.selected_conversion - 1)
-                                                % (ime_state.conversions.len());
+                                        ime_state.selected_conversion = (ime_state
+                                            .selected_conversion
+                                            + ime_state.conversions.len()
+                                            - 1)
+                                            % (ime_state.conversions.len());
                                     };
                                     info!("new index {}", ime_state.selected_conversion);
                                 } else {
