@@ -11,7 +11,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use crate::renderer::gui::State;
+use crate::renderer::gui::GUIState;
 use crate::{
     config::{HENKAN_KEY, MUHENKAN_KEY},
     db,
@@ -49,7 +49,7 @@ pub async fn run() {
         .build(&event_loop)
         .unwrap();
 
-    let mut gui_state = State::new(&window).await;
+    let mut gui_state = GUIState::new(&window).await;
 
     let mut ime_state = IMEState::new();
     let mut converter = Converter::new();
@@ -91,6 +91,13 @@ pub async fn run() {
         }
         Event::DeviceEvent { device_id, event } => {
             // events that are recieved regardless of focus
+            let mut clear_conversions = || {
+                ime_state.conversions.clear();
+                gui_state.conversions.clear();
+                ime_state.selected_conversion = 0;
+                update_size(&gui_state, &window);
+            };
+
             match event {
                 DeviceEvent::Key(KeyboardInput {
                     state,
@@ -115,9 +122,7 @@ pub async fn run() {
 
                                     // TOOD duplicate of return rn
                                     converter.accept();
-                                    ime_state.conversions.clear();
-                                    gui_state.conversions.clear();
-                                    ime_state.selected_conversion = 0;
+                                    clear_conversions();
 
                                     gui_state.output = String::new();
                                     window.set_visible(false);
@@ -126,23 +131,23 @@ pub async fn run() {
                                     info!("accepting: {}", converter.output);
 
                                     converter.accept();
-                                    ime_state.conversions.clear();
-                                    gui_state.conversions.clear();
-                                    ime_state.selected_conversion = 0;
+                                    clear_conversions();
 
                                     gui_state.output = String::new();
                                     window.set_visible(false);
                                 }
                                 VirtualKeyCode::Back => {
                                     converter.del_char();
+
+                                    // we changed input so clear conversions
+                                    clear_conversions();
+
                                     gui_state.output = converter.output.clone();
                                     info!("deleted {:?}", converter.output);
                                 }
                                 VirtualKeyCode::Escape => {
                                     // cancel out of conversion
-                                    ime_state.conversions.clear();
-                                    gui_state.conversions.clear();
-                                    ime_state.selected_conversion = 0;
+                                    clear_conversions();
 
                                     // bring back raw kana
                                     gui_state.output = converter.output.clone();
@@ -192,12 +197,12 @@ pub async fn run() {
                                     // otherwise feed input directly to converter
                                     if let Some(c) = virtual_to_char(virtual_keycode, modifiers) {
                                         converter.input_char(c);
-                                        gui_state.output = converter.output.clone();
-                                        info!("inputted {:?}", converter.output);
 
                                         // we changed input so clear conversions
-                                        ime_state.conversions.clear();
-                                        gui_state.conversions.clear();
+                                        clear_conversions();
+
+                                        gui_state.output = converter.output.clone();
+                                        info!("inputted {:?}", converter.output);
 
                                         // show completion box
                                         window.set_visible(true);
@@ -215,7 +220,7 @@ pub async fn run() {
     });
 }
 
-fn update_size(gui_state: &State, window: &Window) {
+fn update_size(gui_state: &GUIState, window: &Window) {
     let scaled_font = gui_state.font.as_scaled(gui_state.font_scale);
 
     // let min_font_size = scaled_font.h_advance(gui_state.font.glyph_id('あ')); // value of 27.62431

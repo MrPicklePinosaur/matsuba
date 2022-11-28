@@ -9,7 +9,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-pub struct State {
+pub struct GUIState {
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -24,7 +24,7 @@ pub struct State {
     pub conversions: Vec<String>,
 }
 
-impl State {
+impl GUIState {
     pub async fn new(window: &Window) -> Self {
         let size = window.inner_size();
 
