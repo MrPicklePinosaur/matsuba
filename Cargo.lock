@@ -1250,6 +1250,7 @@ version = "0.1.0"
 dependencies = [
  "config",
  "env_logger",
+ "lazy_static",
  "log",
  "matsuba_common",
  "matsuba_grpc",

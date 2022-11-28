@@ -5,6 +5,7 @@ mod renderer;
 mod service;
 mod xmlparse;
 
+use crate::config::Settings;
 use tonic::transport::Server;
 
 use crate::service::{MatsubaServer, MatsubaService};
@@ -12,6 +13,8 @@ use crate::service::{MatsubaServer, MatsubaService};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::builder().format_timestamp(None).init();
+
+    let settings = Settings::load()?;
 
     renderer::run().await;
 
