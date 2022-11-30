@@ -14,11 +14,12 @@ use crate::service::{MatsubaServer, MatsubaService};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::builder().format_timestamp(None).init();
 
-    let settings = Settings::load()?;
-
     renderer::run().await;
 
-    let addr = "[::1]:10000".parse().unwrap();
+    // manually trigger lazy static call (sorta hacky)
+    let listen_address = &config::SETTINGS.server.listen_address;
+
+    let addr = listen_address.parse().unwrap();
     // let inner = MatsubaService {xsession: session};
     let inner = MatsubaService {};
 

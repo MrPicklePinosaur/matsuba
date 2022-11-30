@@ -2,10 +2,15 @@
 use config::{Config, ConfigError, File};
 use serde::Deserialize;
 use winit::event::VirtualKeyCode;
+use lazy_static::lazy_static;
 
 pub static CACHE_DIR: &str = ".cache/matsuba"; // where the database file goes
 pub const MUHENKAN_KEY: VirtualKeyCode = VirtualKeyCode::Key9;
 pub const HENKAN_KEY: VirtualKeyCode = VirtualKeyCode::Key0;
+
+lazy_static! {
+    pub static ref SETTINGS: Settings = Settings::load().expect("Issue parsing config");
+}
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
@@ -17,23 +22,6 @@ pub struct Settings {
 #[derive(Debug, Deserialize)]
 pub struct Server {
     pub listen_address: String,
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            cache_dir: ".cache/matsuba".into(),
-            server: Server::default(),
-        }
-    }
-}
-
-impl Default for Server {
-    fn default() -> Self {
-        Self {
-            listen_address: "[::1]:10000".into(),
-        }
-    }
 }
 
 /*
@@ -56,10 +44,24 @@ pub struct KeyMap {
 
 impl Settings {
     pub fn load() -> Result<Self, ConfigError> {
-        let conf = Config::builder()
+       let conf = Config::builder()
+            .add_source(File::with_name("matsuba_default.toml"))
             .add_source(File::with_name("matsuba.toml"))
             .build()?;
 
         conf.try_deserialize()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::config::Settings;
+
+    #[test]
+    fn simple() {
+	let settings = Settings::load();
+	println!("{:?}", settings);
+	assert!(settings.is_ok());
     }
 }
