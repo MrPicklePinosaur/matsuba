@@ -1,5 +1,7 @@
 use roxmltree::{Document, Node, ParsingOptions};
 use std::collections::{HashMap, HashSet};
+use std::error::Error;
+use std::fmt::Display;
 use std::path::Path;
 use std::vec::Vec;
 
@@ -8,7 +10,20 @@ use log::debug;
 use super::db::insert_entry;
 use super::db::{DBConnection, Entry};
 
-use crate::error::{BoxResult, SimpleError};
+use crate::error::BoxResult;
+
+#[derive(Debug)]
+pub enum XmlError {
+    KebNotExist
+}
+impl Error for XmlError {}
+impl Display for XmlError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	match self {
+	    Self::KebNotExist => write!(f, "keb does not exist"),
+	}
+    }
+}
 
 pub fn parse_jmdict_xml(
     conn: &mut DBConnection,
@@ -92,7 +107,7 @@ fn parse_entry(conn: &DBConnection, entry_node: &Node, tags: &HashSet<&str>) -> 
                     for keb in add_reading_to {
                         entries
                             .get_mut(keb)
-                            .ok_or(SimpleError::new("keb does not exist"))?
+                            .ok_or(XmlError::KebNotExist)?
                             .push(Entry::new(reb_text.to_string(), keb.to_string()));
                     }
                 }
