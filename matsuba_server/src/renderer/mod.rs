@@ -1,4 +1,5 @@
 mod gui;
+mod util;
 
 use log::{debug, info};
 use wgpu::include_wgsl;
@@ -18,6 +19,8 @@ use crate::{
 };
 
 use matsuba_common::converter::Converter;
+
+use self::util::Key;
 
 struct IMEState {
     selected_conversion: usize,
@@ -195,7 +198,7 @@ pub async fn run() {
                                 }
                                 _ => {
                                     // otherwise feed input directly to converter
-                                    if let Some(c) = virtual_to_char(virtual_keycode, modifiers) {
+                                    if let Ok(c) = char::try_from(Key(virtual_keycode, modifiers)) {
                                         converter.input_char(c);
 
                                         // we changed input so clear conversions
@@ -235,64 +238,4 @@ fn update_size(gui_state: &GUIState, window: &Window) {
         width: total_width,
         height: total_height,
     });
-}
-
-// TODO make this nicer
-fn virtual_to_char(k: VirtualKeyCode, m: ModifiersState) -> Option<char> {
-    let byte = match k {
-        VirtualKeyCode::A if !m.shift() => 0x61,
-        VirtualKeyCode::B if !m.shift() => 0x62,
-        VirtualKeyCode::C if !m.shift() => 0x63,
-        VirtualKeyCode::D if !m.shift() => 0x64,
-        VirtualKeyCode::E if !m.shift() => 0x65,
-        VirtualKeyCode::F if !m.shift() => 0x66,
-        VirtualKeyCode::G if !m.shift() => 0x67,
-        VirtualKeyCode::H if !m.shift() => 0x68,
-        VirtualKeyCode::I if !m.shift() => 0x69,
-        VirtualKeyCode::J if !m.shift() => 0x6a,
-        VirtualKeyCode::K if !m.shift() => 0x6b,
-        VirtualKeyCode::L if !m.shift() => 0x6c,
-        VirtualKeyCode::M if !m.shift() => 0x6d,
-        VirtualKeyCode::N if !m.shift() => 0x6e,
-        VirtualKeyCode::O if !m.shift() => 0x6f,
-        VirtualKeyCode::P if !m.shift() => 0x70,
-        VirtualKeyCode::Q if !m.shift() => 0x71,
-        VirtualKeyCode::R if !m.shift() => 0x72,
-        VirtualKeyCode::S if !m.shift() => 0x73,
-        VirtualKeyCode::T if !m.shift() => 0x74,
-        VirtualKeyCode::U if !m.shift() => 0x75,
-        VirtualKeyCode::V if !m.shift() => 0x76,
-        VirtualKeyCode::W if !m.shift() => 0x77,
-        VirtualKeyCode::X if !m.shift() => 0x78,
-        VirtualKeyCode::Y if !m.shift() => 0x79,
-        VirtualKeyCode::Z if !m.shift() => 0x7a,
-        VirtualKeyCode::A if m.shift() => 0x41,
-        VirtualKeyCode::B if m.shift() => 0x42,
-        VirtualKeyCode::C if m.shift() => 0x43,
-        VirtualKeyCode::D if m.shift() => 0x44,
-        VirtualKeyCode::E if m.shift() => 0x45,
-        VirtualKeyCode::F if m.shift() => 0x46,
-        VirtualKeyCode::G if m.shift() => 0x47,
-        VirtualKeyCode::H if m.shift() => 0x48,
-        VirtualKeyCode::I if m.shift() => 0x49,
-        VirtualKeyCode::J if m.shift() => 0x4a,
-        VirtualKeyCode::K if m.shift() => 0x4b,
-        VirtualKeyCode::L if m.shift() => 0x4c,
-        VirtualKeyCode::M if m.shift() => 0x4d,
-        VirtualKeyCode::N if m.shift() => 0x4e,
-        VirtualKeyCode::O if m.shift() => 0x4f,
-        VirtualKeyCode::P if m.shift() => 0x50,
-        VirtualKeyCode::Q if m.shift() => 0x51,
-        VirtualKeyCode::R if m.shift() => 0x52,
-        VirtualKeyCode::S if m.shift() => 0x53,
-        VirtualKeyCode::T if m.shift() => 0x54,
-        VirtualKeyCode::U if m.shift() => 0x55,
-        VirtualKeyCode::V if m.shift() => 0x56,
-        VirtualKeyCode::W if m.shift() => 0x57,
-        VirtualKeyCode::X if m.shift() => 0x58,
-        VirtualKeyCode::Y if m.shift() => 0x59,
-        VirtualKeyCode::Z if m.shift() => 0x5a,
-        _ => return None,
-    };
-    char::from_u32(byte)
 }
