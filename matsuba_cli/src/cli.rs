@@ -16,23 +16,19 @@ use std::fmt;
 pub type BoxResult<T> = Result<T, Box<dyn Error>>;
 
 #[derive(Debug)]
-pub struct SimpleError {
-    pub msg: String,
+pub enum CliError {
+    WrongArgCount,
+    InvalidTag(String),
 }
 
-impl SimpleError {
-    pub fn new(msg: &str) -> SimpleError {
-        SimpleError {
-            msg: msg.to_string(),
-        }
-    }
-}
+impl Error for CliError {}
 
-impl Error for SimpleError {}
-
-impl fmt::Display for SimpleError {
+impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.msg)
+	match self {
+	    CliError::WrongArgCount => write!(f, "Wrong number of arguments"),
+	    CliError::InvalidTag(tag) => write!(f, "Invalid tag passed: {}", tag),
+	}
     }
 }
 
@@ -121,7 +117,7 @@ fn handle_unlock(flagparse: FlagParse) -> BoxResult<()> {
 
 fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
     if flagparse.args.len() == 0 {
-        return Err(Box::new(SimpleError::new("invalid number of args")));
+        return Err(Box::new(CliError::WrongArgCount));
     }
 
     // tag customization
@@ -132,7 +128,7 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
     for option in tag_options.split(",") {
         let (mode, tag) = option.split_at(1);
         if tag.len() == 0 {
-            return Err(Box::new(SimpleError::new("invalid tag")));
+            return Err(Box::new(CliError::InvalidTag(tag.to_owned())));
         }
 
         if mode == "+" {
@@ -140,7 +136,7 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
         } else if mode == "-" {
             default_tags.remove(tag);
         } else {
-            return Err(Box::new(SimpleError::new("invalid tag")));
+            return Err(Box::new(CliError::InvalidTag(tag.to_owned())));
         }
     }
 
