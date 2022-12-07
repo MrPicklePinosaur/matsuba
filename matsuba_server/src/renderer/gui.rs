@@ -119,6 +119,11 @@ impl GUIState {
     pub fn update(&mut self) {}
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        // TODO constants move to config later
+        let bg_color: Vector3<f32> = Vector3::new(0.1, 0.1, 0.1);
+        let cur_color: Vector3<f32> = Vector3::new(0.4, 0.4, 0.4);
+        let hl_color: Vector3<f32> = Vector3::new(0.25, 0.25, 0.25);
+
         let output = self.surface.get_current_texture()?;
         let mut view = output
             .texture
@@ -136,9 +141,9 @@ impl GUIState {
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: 0.0,
-                        g: 0.0,
-                        b: 0.0,
+                        r: bg_color.x as f64,
+                        g: bg_color.y as f64,
+                        b: bg_color.z as f64,
                         a: 1.0,
                     }),
                     store: true,
@@ -158,7 +163,7 @@ impl GUIState {
             Instance {
                 position: Vector3::new(0., 1. - 1. / columns, 0.),
                 scale: Vector3::new(1., 1. / columns, 1.),
-                color: Vector3::new(0., 0., 1.),
+                color: cur_color,
             },
             // conversion highlight
             Instance {
@@ -168,7 +173,7 @@ impl GUIState {
                     0.,
                 ),
                 scale: Vector3::new(1., 1. / columns, 1.),
-                color: Vector3::new(1., 0., 0.),
+                color: hl_color,
             },
         ];
         for instance in instances {
