@@ -98,6 +98,7 @@ pub async fn run() {
                 ime_state.conversions.clear();
                 gui_state.conversions.clear();
                 ime_state.selected_conversion = 0;
+                gui_state.selected_conversion = ime_state.selected_conversion;
                 update_size(&gui_state, &window);
             };
 
@@ -162,12 +163,16 @@ pub async fn run() {
                                             ime_state.selected_conversion =
                                                 (ime_state.selected_conversion + 1)
                                                     % (ime_state.conversions.len());
+                                            gui_state.selected_conversion =
+                                                ime_state.selected_conversion;
                                         } else {
                                             ime_state.selected_conversion = (ime_state
                                                 .selected_conversion
                                                 + ime_state.conversions.len()
                                                 - 1)
                                                 % (ime_state.conversions.len());
+                                            gui_state.selected_conversion =
+                                                ime_state.selected_conversion;
                                         };
                                         info!("new index {}", ime_state.selected_conversion);
                                     } else {
@@ -187,6 +192,8 @@ pub async fn run() {
 
                                         // set current to beginning
                                         ime_state.selected_conversion = 0;
+                                        gui_state.selected_conversion =
+                                            ime_state.selected_conversion;
                                         info!("conversions {:?}", ime_state.conversions);
                                     }
                                     gui_state.output = ime_state

@@ -25,10 +25,10 @@ impl Error for CliError {}
 
 impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	match self {
-	    CliError::WrongArgCount => write!(f, "Wrong number of arguments"),
-	    CliError::InvalidTag(tag) => write!(f, "Invalid tag passed: {}", tag),
-	}
+        match self {
+            CliError::WrongArgCount => write!(f, "Wrong number of arguments"),
+            CliError::InvalidTag(tag) => write!(f, "Invalid tag passed: {}", tag),
+        }
     }
 }
 

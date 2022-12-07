@@ -23,9 +23,11 @@ rusqlite = { version = "0.27.0", features = ["bundled"] }
 roxmltree = { version = "0.14.1" }
 config = { version = "0.13", features = ["toml"] }
 serde = { version = "1.0", features = ["derive"] }
+cgmath = "0.18"
 
 wgpu = "0.14"
 wgpu_glyph = "0.18"
+pino_wgpu_shape = { git = "https://github.com/MrPicklePinosaur/pino_wgpu_shape" }
 winit = "0.27"
 
 env_logger = "0.9"

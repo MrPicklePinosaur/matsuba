@@ -19,9 +19,11 @@ pub struct GUIState {
     pub font: FontArc,
     pub font_scale: f32,
     glyph_brush: wgpu_glyph::GlyphBrush<()>,
+    shape_renderer: pino_wgpu_shape::ShapeRenderer,
 
     pub output: String,
     pub conversions: Vec<String>,
+    pub selected_conversion: usize,
 }
 
 impl GUIState {
@@ -81,6 +83,8 @@ impl GUIState {
         let glyph_brush =
             wgpu_glyph::GlyphBrushBuilder::using_font(font.clone()).build(&device, render_format);
 
+        let shape_renderer = pino_wgpu_shape::ShapeRenderer::new(&device, render_format);
+
         Self {
             surface,
             device,
@@ -91,9 +95,11 @@ impl GUIState {
             font,
             font_scale: 40.0,
             glyph_brush,
+            shape_renderer,
 
             output: String::new(),
             conversions: vec![],
+            selected_conversion: 0,
         }
     }
 
@@ -114,7 +120,7 @@ impl GUIState {
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
-        let view = output
+        let mut view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
         let mut encoder = self
@@ -123,7 +129,7 @@ impl GUIState {
                 label: Some("Render Encoder"),
             });
 
-        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &view,
@@ -141,6 +147,39 @@ impl GUIState {
             depth_stencil_attachment: None,
         });
         drop(render_pass);
+
+        // draw box
+        let columns = 1.0 + self.conversions.len() as f32;
+        use cgmath::Vector3;
+        use pino_wgpu_shape::Instance;
+
+        let instances = vec![
+            // selected conversion hightlight
+            Instance {
+                position: Vector3::new(0., 1. - 1. / columns, 0.),
+                scale: Vector3::new(1., 1. / columns, 1.),
+                color: Vector3::new(0., 0., 1.),
+            },
+            // conversion highlight
+            Instance {
+                position: Vector3::new(
+                    0.,
+                    (1. - 1. / columns) - (2. / columns * (self.selected_conversion as f32 + 1.)),
+                    0.,
+                ),
+                scale: Vector3::new(1., 1. / columns, 1.),
+                color: Vector3::new(1., 0., 0.),
+            },
+        ];
+        for instance in instances {
+            self.shape_renderer.queue(instance);
+        }
+        self.shape_renderer.draw(
+            &self.device,
+            &mut encoder,
+            &mut view,
+            &mut self.staging_belt,
+        );
 
         // draw selected text
         self.glyph_brush.queue(wgpu_glyph::Section {

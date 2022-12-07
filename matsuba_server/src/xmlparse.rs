@@ -14,14 +14,14 @@ use crate::error::BoxResult;
 
 #[derive(Debug)]
 pub enum XmlError {
-    KebNotExist
+    KebNotExist,
 }
 impl Error for XmlError {}
 impl Display for XmlError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-	match self {
-	    Self::KebNotExist => write!(f, "keb does not exist"),
-	}
+        match self {
+            Self::KebNotExist => write!(f, "keb does not exist"),
+        }
     }
 }
 
