@@ -1,6 +1,7 @@
 mod config;
 mod db;
 mod error;
+mod output;
 mod renderer;
 mod service;
 mod xmlparse;

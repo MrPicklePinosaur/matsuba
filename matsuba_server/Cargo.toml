@@ -11,6 +11,11 @@ repository = "https://github.com/MrPicklePinosaur/matsuba"
 name = "matsud"
 path = "src/main.rs"
 
+[features]
+default = ["x11"]
+
+x11 = []
+
 [dependencies]
 matsuba_common = { path = "../matsuba_common" }
 matsuba_grpc = { path = "../matsuba_grpc" }
