@@ -12,11 +12,11 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use crate::renderer::gui::GUIState;
 use crate::{
     config::{HENKAN_KEY, MUHENKAN_KEY},
     db,
 };
+use crate::{output, renderer::gui::GUIState};
 
 use matsuba_common::converter::Converter;
 
@@ -94,13 +94,6 @@ pub async fn run() {
         }
         Event::DeviceEvent { device_id, event } => {
             // events that are recieved regardless of focus
-            let mut clear_conversions = || {
-                ime_state.conversions.clear();
-                gui_state.conversions.clear();
-                ime_state.selected_conversion = 0;
-                gui_state.selected_conversion = ime_state.selected_conversion;
-                update_size(&gui_state, &window);
-            };
 
             match event {
                 DeviceEvent::Key(KeyboardInput {
@@ -126,7 +119,13 @@ pub async fn run() {
 
                                     // TOOD duplicate of return rn
                                     converter.accept();
-                                    clear_conversions();
+                                    // clear conversions start
+                                    ime_state.conversions.clear();
+                                    gui_state.conversions.clear();
+                                    ime_state.selected_conversion = 0;
+                                    gui_state.selected_conversion = ime_state.selected_conversion;
+                                    update_size(&gui_state, &window);
+                                    // clear conversions end
 
                                     gui_state.output = String::new();
                                     window.set_visible(false);
@@ -134,8 +133,26 @@ pub async fn run() {
                                 VirtualKeyCode::Return => {
                                     info!("accepting: {}", converter.output);
 
+                                    let output = if let Some(output) =
+                                        ime_state.conversions.get(ime_state.selected_conversion)
+                                    {
+                                        output
+                                    } else {
+                                        &converter.output
+                                    };
+
+                                    if let Err(e) = output::output(&output) {
+                                        println!("{:?}", e);
+                                    }
+
                                     converter.accept();
-                                    clear_conversions();
+                                    // clear conversions start
+                                    ime_state.conversions.clear();
+                                    gui_state.conversions.clear();
+                                    ime_state.selected_conversion = 0;
+                                    gui_state.selected_conversion = ime_state.selected_conversion;
+                                    update_size(&gui_state, &window);
+                                    // clear conversions end
 
                                     gui_state.output = String::new();
                                     window.set_visible(false);
@@ -144,14 +161,26 @@ pub async fn run() {
                                     converter.del_char();
 
                                     // we changed input so clear conversions
-                                    clear_conversions();
+                                    // clear conversions start
+                                    ime_state.conversions.clear();
+                                    gui_state.conversions.clear();
+                                    ime_state.selected_conversion = 0;
+                                    gui_state.selected_conversion = ime_state.selected_conversion;
+                                    update_size(&gui_state, &window);
+                                    // clear conversions end
 
                                     gui_state.output = converter.output.clone();
                                     info!("deleted {:?}", converter.output);
                                 }
                                 VirtualKeyCode::Escape => {
                                     // cancel out of conversion
-                                    clear_conversions();
+                                    // clear conversions start
+                                    ime_state.conversions.clear();
+                                    gui_state.conversions.clear();
+                                    ime_state.selected_conversion = 0;
+                                    gui_state.selected_conversion = ime_state.selected_conversion;
+                                    update_size(&gui_state, &window);
+                                    // clear conversions end
 
                                     // bring back raw kana
                                     gui_state.output = converter.output.clone();
@@ -209,7 +238,14 @@ pub async fn run() {
                                         converter.input_char(c);
 
                                         // we changed input so clear conversions
-                                        clear_conversions();
+                                        // clear conversions start
+                                        ime_state.conversions.clear();
+                                        gui_state.conversions.clear();
+                                        ime_state.selected_conversion = 0;
+                                        gui_state.selected_conversion =
+                                            ime_state.selected_conversion;
+                                        update_size(&gui_state, &window);
+                                        // clear conversions end
 
                                         gui_state.output = converter.output.clone();
                                         info!("inputted {:?}", converter.output);
