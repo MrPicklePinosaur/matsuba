@@ -226,17 +226,20 @@ pub async fn run() {
                         _ => {
                             // otherwise feed input directly to converter
                             if let Some(c) = keysym.as_char() {
-                                converter.input_char(c);
+                                // TODO fix pino_xmodmap library to not return null characters
+                                if c != '\0' {
+                                    converter.input_char(c);
 
-                                // we changed input so clear conversions
-                                ime_state.clear_conversions();
+                                    // we changed input so clear conversions
+                                    ime_state.clear_conversions();
 
-                                ime_state.output = converter.output.clone();
-                                info!("inputted {:?}", converter.output);
+                                    ime_state.output = converter.output.clone();
+                                    info!("inputted {:?}", converter.output);
 
-                                // show completion box
-                                window.set_visible(true);
-                                update_size(&gui_state, &ime_state, &window);
+                                    // show completion box
+                                    window.set_visible(true);
+                                    update_size(&gui_state, &ime_state, &window);
+                                }
                             }
                         }
                     };
