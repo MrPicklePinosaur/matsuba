@@ -1,3 +1,4 @@
+use crate::config::HENKAN_KEY;
 use pino_xmodmap::{KeySym, KeyTable, Modifier};
 use std::process::Command;
 use std::{
@@ -10,8 +11,6 @@ use x11rb::{
     rust_connection::RustConnection,
     CURRENT_TIME,
 };
-
-pub const HENKAN_KEY: KeySym = KeySym::KEY_0;
 
 #[derive(Debug)]
 pub enum XorgError {
@@ -38,7 +37,7 @@ pub struct XSession {
 }
 
 impl XSession {
-    pub fn new() -> Result<XSession, XorgError> {
+    pub fn new() -> Result<XSession, Box<dyn std::error::Error>> {
         let (conn, screen_num) = x11rb::connect(None).map_err(|_| XorgError::ConnectionFailure)?;
 
         let keytable = KeyTable::new().map_err(|_| XorgError::Keytable)?;
@@ -54,21 +53,29 @@ impl XSession {
         &self.conn.setup().roots[self.screen_num]
     }
 
-    /*
-    pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.configure_root()?;
-        while self.is_running() {
-            self.render_completion_box()?;
-            self.conn.flush()?;
+    pub fn handle_keypress(
+        &self,
+        mut handler: impl FnMut(KeySym, Modifier),
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.conn.flush()?;
 
-            let event = self.conn.wait_for_event()?;
-            self.handle_event(&event)?;
+        if let Some(event) = self.conn.poll_for_event()? {
+            match event {
+                Event::KeyPress(event) => {
+                    // extract key press info
+                    let modifier = x_to_xmodmap_modifier(event.state);
+                    let keysym = self.keytable.get_keysym(modifier.clone(), event.detail)?;
+
+                    handler(keysym, modifier);
+                }
+                _ => {}
+            }
         }
+
         Ok(())
     }
-    */
 
-    fn configure_root(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn configure_root(&self) -> Result<(), Box<dyn std::error::Error>> {
         // append to root window attributes
         let attrs = get_window_attributes(&self.conn, self.screen().root)?.reply()?;
         let values_list = ChangeWindowAttributesAux::default()
@@ -80,7 +87,10 @@ impl XSession {
         Ok(())
     }
 
-    fn grab_keyboard(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn grab_keyboard(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let (henkan_mod, henkan_keysym) = self.keytable.get_key(HENKAN_KEY)?;
+        // ungrab_key(&self.conn, henkan_keysym, self.screen().root, ModMask::ANY)?.check()?;
+
         // grab user keypresses
         let grab_status = grab_keyboard(
             &self.conn,
@@ -97,7 +107,7 @@ impl XSession {
         Ok(())
     }
 
-    fn ungrab_keyboard(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn ungrab_keyboard(&self) -> Result<(), Box<dyn std::error::Error>> {
         ungrab_keyboard(&self.conn, CURRENT_TIME)?.check()?;
         // the only key we still want to grab is the muhenkan key
 
@@ -117,10 +127,18 @@ impl XSession {
     }
 }
 
+fn x_to_xmodmap_modifier(state: KeyButMask) -> Modifier {
+    if u16::from(state) & u16::from(KeyButMask::SHIFT) == 0 {
+        Modifier::Key
+    } else {
+        Modifier::ShiftKey
+    }
+}
+
 fn xmodmap_to_x_modifier(modifier: Modifier) -> ModMask {
     match modifier {
-        Modifier::Key => ModMask::ANY,
+        Modifier::Key => ModMask::from(0u8),
         Modifier::ShiftKey => ModMask::SHIFT,
-        _ => ModMask::ANY, // TODO maybe should return error?
+        _ => ModMask::from(0u8), // TODO maybe should return error?
     }
 }
