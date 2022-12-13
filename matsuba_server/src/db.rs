@@ -1,5 +1,5 @@
 use rusqlite::Connection;
-use rusqlite::{params, Result, ToSql};
+use rusqlite::{params, Result};
 
 pub type DBConnection = Connection;
 
@@ -22,7 +22,7 @@ impl Entry {
 
 pub fn get_connection() -> Result<Connection> {
     // TODO make this config variable
-    return Connection::open("./db/matsuba.db3");
+    Connection::open("./db/matsuba.db3")
 }
 
 pub fn init(conn: &Connection) -> Result<()> {

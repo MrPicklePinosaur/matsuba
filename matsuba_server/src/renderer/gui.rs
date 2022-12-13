@@ -1,13 +1,5 @@
-use log::{debug, info};
-use wgpu::include_wgsl;
 use wgpu_glyph::ab_glyph::{Font, FontArc, ScaleFont};
-use winit::{
-    dpi::{PhysicalPosition, PhysicalSize},
-    event::{ElementState, ModifiersState, *},
-    event_loop::{ControlFlow, EventLoop},
-    platform::unix::WindowBuilderExtUnix,
-    window::{Window, WindowBuilder},
-};
+use winit::{event::*, window::Window};
 
 use super::IMEState;
 
@@ -106,7 +98,7 @@ impl GUIState {
         }
     }
 
-    pub fn input(&mut self, event: &WindowEvent) -> bool {
+    pub fn input(&mut self, _event: &WindowEvent) -> bool {
         false
     }
 

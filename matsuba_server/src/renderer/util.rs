@@ -1,6 +1,5 @@
 use std::{error::Error, fmt::Display};
 
-use serde::Deserialize;
 use winit::event::{ModifiersState, VirtualKeyCode};
 
 #[derive(Clone, Copy)]
@@ -82,7 +81,7 @@ impl TryFrom<Key> for char {
 impl Display for Key {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Ok(c) = char::try_from(*self) {
-            write!(f, "{}", c);
+            write!(f, "{}", c)?;
             Ok(())
         } else {
             Err(std::fmt::Error)

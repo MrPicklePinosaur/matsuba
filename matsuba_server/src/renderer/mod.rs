@@ -1,12 +1,12 @@
 mod gui;
 mod util;
 
-use log::{debug, info};
-use wgpu::include_wgsl;
-use wgpu_glyph::ab_glyph::{Font, FontArc, ScaleFont};
+use log::info;
+
+use wgpu_glyph::ab_glyph::{Font, ScaleFont};
 use winit::{
-    dpi::{LogicalSize, PhysicalPosition, PhysicalSize},
-    event::{ElementState, ModifiersState, *},
+    dpi::{LogicalSize, PhysicalSize},
+    event::{ElementState, *},
     event_loop::{ControlFlow, EventLoop},
     platform::unix::WindowBuilderExtUnix,
     window::{Window, WindowBuilder},
@@ -99,7 +99,10 @@ pub async fn run() {
             // request it.
             window.request_redraw();
         }
-        Event::DeviceEvent { device_id, event } => {
+        Event::DeviceEvent {
+            device_id: _,
+            event,
+        } => {
             // events that are recieved regardless of focus
 
             match event {
@@ -145,7 +148,7 @@ pub async fn run() {
                                         &converter.output
                                     };
 
-                                    if let Err(e) = output::output(&output) {
+                                    if let Err(e) = output::output(output) {
                                         println!("{:?}", e);
                                     }
 
@@ -176,7 +179,7 @@ pub async fn run() {
                                 }
                                 VirtualKeyCode::Tab => {
                                     // conversion already done, cycle through options
-                                    if ime_state.conversions.len() > 0 {
+                                    if !ime_state.conversions.is_empty() {
                                         if !modifiers.shift() {
                                             ime_state.selected_conversion =
                                                 (ime_state.selected_conversion + 1)

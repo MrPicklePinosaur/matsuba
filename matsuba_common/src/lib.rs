@@ -263,5 +263,5 @@ pub fn all_tags<'a>() -> HashSet<&'a str> {
         "ok", // out-dated or obsolete kana usage
         "uK" // word usually written using kanji alone
     };
-    return default_tags;
+    default_tags
 }

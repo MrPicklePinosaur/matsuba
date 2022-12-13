@@ -99,7 +99,7 @@ fn parse_entry(conn: &DBConnection, entry_node: &Node, tags: &HashSet<&str>) -> 
                 }
 
                 // if no re_restr, assume all
-                if add_reading_to.len() == 0 {
+                if add_reading_to.is_empty() {
                     for (keb, conv) in entries.iter_mut() {
                         conv.push(Entry::new(reb_text.to_string(), keb.to_string()));
                     }

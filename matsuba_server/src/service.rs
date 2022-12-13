@@ -6,7 +6,7 @@ use matsuba_grpc::{
 use std::collections::HashSet;
 use tonic::{Code, Request, Response, Status};
 
-use matsuba_common::converter::{build_dfa, Converter};
+use matsuba_common::converter::Converter;
 
 use super::{db, xmlparse};
 
@@ -57,14 +57,12 @@ impl Matsuba for MatsubaService {
             .map(|x| x.k_ele.clone())
             .collect::<Vec<String>>();
 
-        Ok(Response::new(ConvertResponse {
-            converted: converted,
-        }))
+        Ok(Response::new(ConvertResponse { converted }))
     }
 
     async fn get_state(
         &self,
-        request: Request<GetStateRequest>,
+        _request: Request<GetStateRequest>,
     ) -> Result<Response<GetStateResponse>, Status> {
         Ok(Response::new(GetStateResponse { henkan: true }))
     }

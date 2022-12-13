@@ -28,7 +28,7 @@ impl State {
         State {
             accepting: None, // empty string does not accept
             transitions: HashMap::new(),
-            depth: depth,
+            depth,
         }
     }
 }
@@ -59,7 +59,7 @@ impl Converter {
 
         let out = self.output.clone();
         self.output.clear();
-        return out;
+        out
     }
 
     fn step_dfa(&mut self) {
@@ -97,15 +97,14 @@ impl Converter {
 
         // small tsu expansion
         if prev_ch.is_some() {
-            let prev_ch = prev_ch.unwrap().clone();
+            let prev_ch = prev_ch.unwrap();
             if ch == prev_ch && REPEATABLE_CHARACTERS.contains(&lowercase_ch) {
                 self.output.pop();
 
-                let small_tsu = match ch.is_ascii_lowercase() {
+                let small_tsu = *match ch.is_ascii_lowercase() {
                     true => HIRAGANA_SMALL_TSU,
                     false => KATAKANA_SMALL_TSU,
-                }
-                .clone();
+                };
                 self.output.push(small_tsu);
             }
         }

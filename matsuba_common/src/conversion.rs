@@ -1,11 +1,11 @@
-pub static HIRAGANA_SMALL_TSU: &'static char = &'っ';
-pub static KATAKANA_SMALL_TSU: &'static char = &'ッ';
+pub static HIRAGANA_SMALL_TSU: &char = &'っ';
+pub static KATAKANA_SMALL_TSU: &char = &'ッ';
 
-pub static REPEATABLE_CHARACTERS: &'static [char] = &[
+pub static REPEATABLE_CHARACTERS: &[char] = &[
     'k', 's', 't', 'c', 'h', 'f', 'm', 'y', 'r', 'w', 'g', 'z', 'j', 'd', 'b', 'p',
 ];
 
-pub static CONVERSION_TABLE: &'static [(&str, &str, &str)] = &[
+pub static CONVERSION_TABLE: &[(&str, &str, &str)] = &[
     ("a", "あ", "ア"),
     ("i", "い", "イ"),
     ("u", "う", "ウ"),

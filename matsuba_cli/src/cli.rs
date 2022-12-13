@@ -1,14 +1,10 @@
 use log::debug;
 use matsuba_grpc::matsuba_client::MatsubaClient;
-use matsuba_grpc::{
-    ConvertRequest, ConvertResponse, FetchRequest, FetchResponse, GetStateRequest, GetStateResponse,
-};
+use matsuba_grpc::{ConvertRequest, FetchRequest};
 use pino_argparse::{Cli, Command, Flag, FlagParse};
 use tonic::Request;
 
 use tokio::runtime::Runtime;
-
-use matsuba_common::*;
 
 use std::error::Error;
 use std::fmt;
@@ -107,16 +103,16 @@ pub fn runcli() -> BoxResult<()> {
     Ok(())
 }
 
-fn handle_run(flagparse: FlagParse) -> BoxResult<()> {
+fn handle_run(_flagparse: FlagParse) -> BoxResult<()> {
     todo!()
 }
 
-fn handle_unlock(flagparse: FlagParse) -> BoxResult<()> {
+fn handle_unlock(_flagparse: FlagParse) -> BoxResult<()> {
     todo!()
 }
 
 fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
-    if flagparse.args.len() == 0 {
+    if flagparse.args.is_empty() {
         return Err(Box::new(CliError::WrongArgCount));
     }
 
@@ -124,10 +120,10 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
     let mut default_tags = matsuba_common::all_tags();
     let tag_options = flagparse
         .get_flag_value::<String>("tags")
-        .unwrap_or(String::new());
-    for option in tag_options.split(",") {
+        .unwrap_or_default();
+    for option in tag_options.split(',') {
         let (mode, tag) = option.split_at(1);
-        if tag.len() == 0 {
+        if tag.is_empty() {
             return Err(Box::new(CliError::InvalidTag(tag.to_owned())));
         }
 
@@ -149,7 +145,7 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
     Runtime::new()?.block_on(async {
         let mut client = MatsubaClient::connect(CONNECTION_STRING).await.unwrap();
 
-        let response = client
+        let _response = client
             .fetch(Request::new(FetchRequest {
                 tags,
                 database_path: flagparse.args[0].clone(),
@@ -179,6 +175,6 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
     Ok(())
 }
 
-fn handle_state(flagparse: FlagParse) -> BoxResult<()> {
+fn handle_state(_flagparse: FlagParse) -> BoxResult<()> {
     todo!()
 }

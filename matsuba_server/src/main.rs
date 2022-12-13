@@ -6,7 +6,6 @@ mod renderer;
 mod service;
 mod xmlparse;
 
-use crate::config::Settings;
 use tonic::transport::Server;
 
 use crate::service::{MatsubaServer, MatsubaService};
