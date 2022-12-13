@@ -9,7 +9,9 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-pub struct GUIState {
+use super::IMEState;
+
+pub(crate) struct GUIState {
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -20,10 +22,6 @@ pub struct GUIState {
     pub font_scale: f32,
     glyph_brush: wgpu_glyph::GlyphBrush<()>,
     shape_renderer: pino_wgpu_shape::ShapeRenderer,
-
-    pub output: String,
-    pub conversions: Vec<String>,
-    pub selected_conversion: usize,
 }
 
 impl GUIState {
@@ -96,10 +94,6 @@ impl GUIState {
             font_scale: 40.0,
             glyph_brush,
             shape_renderer,
-
-            output: String::new(),
-            conversions: vec![],
-            selected_conversion: 0,
         }
     }
 
@@ -118,7 +112,7 @@ impl GUIState {
 
     pub fn update(&mut self) {}
 
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self, ime_state: &IMEState) -> Result<(), wgpu::SurfaceError> {
         // TODO constants move to config later
         let bg_color: Vector3<f32> = Vector3::new(0.1, 0.1, 0.1);
         let cur_color: Vector3<f32> = Vector3::new(0.4, 0.4, 0.4);
@@ -154,7 +148,7 @@ impl GUIState {
         drop(render_pass);
 
         // draw box
-        let columns = 1.0 + self.conversions.len() as f32;
+        let columns = 1.0 + ime_state.conversions.len() as f32;
         use cgmath::Vector3;
         use pino_wgpu_shape::Instance;
 
@@ -169,7 +163,8 @@ impl GUIState {
             Instance {
                 position: Vector3::new(
                     0.,
-                    (1. - 1. / columns) - (2. / columns * (self.selected_conversion as f32 + 1.)),
+                    (1. - 1. / columns)
+                        - (2. / columns * (ime_state.selected_conversion as f32 + 1.)),
                     0.,
                 ),
                 scale: Vector3::new(1., 1. / columns, 1.),
@@ -190,7 +185,7 @@ impl GUIState {
         self.glyph_brush.queue(wgpu_glyph::Section {
             screen_position: (0., 0.),
             bounds: (self.size.width as f32, self.size.height as f32),
-            text: vec![wgpu_glyph::Text::new(&self.output)
+            text: vec![wgpu_glyph::Text::new(&ime_state.output)
                 .with_color([1.0, 1.0, 1.0, 1.0])
                 .with_scale(self.font_scale)],
             ..wgpu_glyph::Section::default()
@@ -198,7 +193,7 @@ impl GUIState {
 
         // draw all completions
         let scaled_font = self.font.as_scaled(self.font_scale);
-        for (i, conversion) in self.conversions.iter().enumerate() {
+        for (i, conversion) in ime_state.conversions.iter().enumerate() {
             self.glyph_brush.queue(wgpu_glyph::Section {
                 screen_position: (0., scaled_font.height() * ((i as f32) + 1.)),
                 bounds: (self.size.width as f32, self.size.height as f32),
