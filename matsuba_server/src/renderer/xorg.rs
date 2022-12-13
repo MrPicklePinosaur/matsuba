@@ -1,5 +1,5 @@
 use crate::config::HENKAN_KEY;
-use pino_xmodmap::{KeySym, KeyTable, Modifier};
+use pino_xmodmap::{Key, KeySym, KeyTable, Modifier};
 use std::process::Command;
 use std::{
     error::Error,
@@ -55,8 +55,7 @@ impl XSession {
 
     pub fn handle_keypress(
         &self,
-        mut handler: impl FnMut(KeySym, Modifier),
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<Option<(Modifier, KeySym)>, Box<dyn std::error::Error>> {
         self.conn.flush()?;
 
         if let Some(event) = self.conn.poll_for_event()? {
@@ -66,13 +65,13 @@ impl XSession {
                     let modifier = x_to_xmodmap_modifier(event.state);
                     let keysym = self.keytable.get_keysym(modifier.clone(), event.detail)?;
 
-                    handler(keysym, modifier);
+                    return Ok(Some((modifier, keysym)));
                 }
                 _ => {}
             }
         }
 
-        Ok(())
+        Ok(None)
     }
 
     pub fn configure_root(&self) -> Result<(), Box<dyn std::error::Error>> {

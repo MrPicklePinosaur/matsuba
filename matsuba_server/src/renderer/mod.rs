@@ -3,9 +3,10 @@ mod util;
 
 #[cfg(feature = "x11")]
 mod xorg;
+use pino_utils::{some_or_continue, some_or_return};
 use pino_xmodmap::{KeySym, Modifier};
 
-use log::info;
+use log::{error, info};
 
 use wgpu_glyph::ab_glyph::{Font, ScaleFont};
 use winit::{
@@ -70,7 +71,7 @@ pub async fn run() {
 
     let xsession = xorg::XSession::new().expect("failed getting xsession");
     xsession.configure_root().expect("could not configure root");
-    // xsession.ungrab_keyboard().expect("could not ungrab kb");
+    xsession.ungrab_keyboard().unwrap(); // only since we start in muhenkan mode
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
@@ -113,138 +114,154 @@ pub async fn run() {
         } => {}
         _ => {
             // now run our own keyboard code
-            xsession.handle_keypress(|keysym, modifier| {
-                if !ime_state.henkan {
-                    match keysym {
-                        HENKAN_KEY => {
-                            info!("henkan");
-                            ime_state.henkan = true;
-                            xsession.grab_keyboard().expect("could not grab kb");
+            let (modifier, keysym) = some_or_return!(xsession.handle_keypress().unwrap());
+
+            if !ime_state.henkan {
+                match keysym {
+                    HENKAN_KEY => {
+                        info!("henkan");
+                        ime_state.henkan = true;
+                        xsession.grab_keyboard().expect("could not grab kb");
+                    }
+                    _ => {}
+                };
+            } else {
+                match keysym {
+                    MUHENKAN_KEY => {
+                        info!("muhenkan");
+                        ime_state.henkan = false;
+
+                        xsession.ungrab_keyboard().expect("could not ungrab kb");
+
+                        // TOOD duplicate of return rn
+                        converter.accept();
+                        ime_state.clear_conversions();
+                        ime_state.conversions.clear();
+                        ime_state.selected_conversion = 0;
+                        update_size(&gui_state, &ime_state, &window);
+
+                        ime_state.output = String::new();
+                        window.set_visible(false);
+                    }
+                    KeySym::KEY_RETURN => {
+                        info!("accepting: {}", converter.output);
+
+                        xsession.ungrab_keyboard().unwrap();
+
+                        let output = if let Some(output) =
+                            ime_state.conversions.get(ime_state.selected_conversion)
+                        {
+                            output
+                        } else {
+                            &converter.output
+                        };
+
+                        if let Err(e) = output::output(output) {
+                            error!("{:?}", e);
                         }
-                        _ => {}
-                    };
-                } else {
-                    match keysym {
-                        MUHENKAN_KEY => {
-                            info!("muhenkan");
-                            ime_state.henkan = false;
 
-                            xsession.ungrab_keyboard().expect("could not ungrab kb");
+                        xsession.grab_keyboard().unwrap();
 
-                            // TOOD duplicate of return rn
+                        converter.accept();
+                        ime_state.clear_conversions();
+                        update_size(&gui_state, &ime_state, &window);
+
+                        ime_state.output = String::new();
+                        window.set_visible(false);
+                    }
+                    KeySym::KEY_BACKSPACE => {
+                        converter.del_char();
+
+                        // we changed input so clear conversions
+                        ime_state.clear_conversions();
+                        update_size(&gui_state, &ime_state, &window);
+
+                        ime_state.output = converter.output.clone();
+                        info!("deleted {:?}", converter.output);
+
+                        // if input empty now close window
+                        if ime_state.output.is_empty() {
+                            window.set_visible(false);
+                        }
+                    }
+                    KeySym::KEY_ESCAPE => {
+                        if ime_state.conversions.is_empty() {
+                            // if conversion already empty, close conversion window and reset entire conversion
+
                             converter.accept();
                             ime_state.clear_conversions();
-                            ime_state.conversions.clear();
-                            ime_state.selected_conversion = 0;
                             update_size(&gui_state, &ime_state, &window);
 
                             ime_state.output = String::new();
                             window.set_visible(false);
-                        }
-                        KeySym::KEY_RETURN => {
-                            info!("accepting: {}", converter.output);
+                        } else {
+                            // otherwise cancel out of conversion
 
-                            xsession.ungrab_keyboard().unwrap();
-
-                            let output = if let Some(output) =
-                                ime_state.conversions.get(ime_state.selected_conversion)
-                            {
-                                output
-                            } else {
-                                &converter.output
-                            };
-
-                            if let Err(e) = output::output(output) {
-                                println!("{:?}", e);
-                            }
-
-                            xsession.grab_keyboard().unwrap();
-
-                            converter.accept();
-                            ime_state.clear_conversions();
-                            update_size(&gui_state, &ime_state, &window);
-
-                            ime_state.output = String::new();
-                            window.set_visible(false);
-                        }
-                        KeySym::KEY_BACKSPACE => {
-                            converter.del_char();
-
-                            // we changed input so clear conversions
-                            ime_state.clear_conversions();
-                            update_size(&gui_state, &ime_state, &window);
-
-                            ime_state.output = converter.output.clone();
-                            info!("deleted {:?}", converter.output);
-                        }
-                        KeySym::KEY_BACKSPACE => {
-                            // cancel out of conversion
                             ime_state.clear_conversions();
                             update_size(&gui_state, &ime_state, &window);
 
                             // bring back raw kana
                             ime_state.output = converter.output.clone();
                         }
-                        KeySym::KEY_TAB => {
-                            // conversion already done, cycle through options
-                            if !ime_state.conversions.is_empty() {
-                                if modifier != Modifier::ShiftKey {
-                                    ime_state.selected_conversion = (ime_state.selected_conversion
-                                        + 1)
-                                        % (ime_state.conversions.len());
-                                } else {
-                                    ime_state.selected_conversion = (ime_state.selected_conversion
-                                        + ime_state.conversions.len()
-                                        - 1)
-                                        % (ime_state.conversions.len());
-                                };
-                                info!("new index {}", ime_state.selected_conversion);
+                    }
+                    KeySym::KEY_TAB => {
+                        // conversion already done, cycle through options
+                        if !ime_state.conversions.is_empty() {
+                            if modifier != Modifier::ShiftKey {
+                                ime_state.selected_conversion = (ime_state.selected_conversion + 1)
+                                    % (ime_state.conversions.len());
                             } else {
-                                // conversion not done, populate conversion options list
-                                let db_conn = db::get_connection().unwrap();
-                                let kana = &converter.output;
-                                let converted = db::search(&db_conn, kana).unwrap();
+                                ime_state.selected_conversion = (ime_state.selected_conversion
+                                    + ime_state.conversions.len()
+                                    - 1)
+                                    % (ime_state.conversions.len());
+                            };
+                            info!("new index {}", ime_state.selected_conversion);
+                        } else {
+                            // conversion not done, populate conversion options list
+                            let db_conn = db::get_connection().unwrap();
+                            let kana = &converter.output;
+                            let converted = db::search(&db_conn, kana).unwrap();
 
-                                for entry in converted {
-                                    ime_state.conversions.push(entry.k_ele);
-                                }
-
-                                // always push exactly what we typed
-                                ime_state.conversions.push(kana.clone());
-
-                                // set current to beginning
-                                ime_state.selected_conversion = 0;
-                                info!("conversions {:?}", ime_state.conversions);
+                            for entry in converted {
+                                ime_state.conversions.push(entry.k_ele);
                             }
-                            ime_state.output = ime_state
-                                .conversions
-                                .get(ime_state.selected_conversion)
-                                .unwrap()
-                                .to_string();
-                            update_size(&gui_state, &ime_state, &window);
+
+                            // always push exactly what we typed
+                            ime_state.conversions.push(kana.clone());
+
+                            // set current to beginning
+                            ime_state.selected_conversion = 0;
+                            info!("conversions {:?}", ime_state.conversions);
                         }
-                        _ => {
-                            // otherwise feed input directly to converter
-                            if let Some(c) = keysym.as_char() {
-                                // TODO fix pino_xmodmap library to not return null characters
-                                if c != '\0' {
-                                    converter.input_char(c);
+                        ime_state.output = ime_state
+                            .conversions
+                            .get(ime_state.selected_conversion)
+                            .unwrap()
+                            .to_string();
+                        update_size(&gui_state, &ime_state, &window);
+                    }
+                    _ => {
+                        // otherwise feed input directly to converter
+                        if let Some(c) = keysym.as_char() {
+                            // TODO fix pino_xmodmap library to not return null characters
+                            if c != '\0' {
+                                converter.input_char(c);
 
-                                    // we changed input so clear conversions
-                                    ime_state.clear_conversions();
+                                // we changed input so clear conversions
+                                ime_state.clear_conversions();
 
-                                    ime_state.output = converter.output.clone();
-                                    info!("inputted {:?}", converter.output);
+                                ime_state.output = converter.output.clone();
+                                info!("inputted {:?}", converter.output);
 
-                                    // show completion box
-                                    window.set_visible(true);
-                                    update_size(&gui_state, &ime_state, &window);
-                                }
+                                // show completion box
+                                window.set_visible(true);
+                                update_size(&gui_state, &ime_state, &window);
                             }
                         }
-                    };
+                    }
                 };
-            });
+            };
         }
     });
 }

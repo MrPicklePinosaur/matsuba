@@ -1284,6 +1284,7 @@ dependencies = [
  "log",
  "matsuba_common",
  "matsuba_grpc",
+ "pino_utils",
  "pino_wgpu_shape",
  "pino_xmodmap",
  "prost",
@@ -1716,6 +1717,25 @@ name = "pino_argparse"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "900690173818c00c2a77695f9d391d1b6678ed1f2754e233be7570eee4cd2b71"
+
+[[package]]
+name = "pino_enum_string"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fac5ed44eb5bd4a4a3b34339f4770284d24719a3fc2585496d5cf93f1e9b7592"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pino_utils"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1efd4dc37fe3f3cc5061d7c9db2e3fc21435237512bde9c55b02f740761261a0"
+dependencies = [
+ "pino_enum_string",
+]
 
 [[package]]
 name = "pino_wgpu_shape"
