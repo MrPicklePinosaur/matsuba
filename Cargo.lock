@@ -833,6 +833,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gethostname"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1ebd34e35c46e00bb73e81363248d627782724609fe1b6396f553f68fe3862e"
+dependencies = [
+ "libc",
+ "winapi",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1275,6 +1285,7 @@ dependencies = [
  "matsuba_common",
  "matsuba_grpc",
  "pino_wgpu_shape",
+ "pino_xmodmap",
  "prost",
  "roxmltree",
  "rusqlite",
@@ -1284,6 +1295,7 @@ dependencies = [
  "wgpu",
  "wgpu_glyph",
  "winit",
+ "x11rb",
 ]
 
 [[package]]
@@ -1714,6 +1726,12 @@ dependencies = [
  "cgmath",
  "wgpu",
 ]
+
+[[package]]
+name = "pino_xmodmap"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c14e8d001fcaa7cca4c572ebd7cf15ace8e36f993d19fbeea4a9e101712f9236"
 
 [[package]]
 name = "pkg-config"
@@ -2861,6 +2879,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "winapi-wsapoll"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44c17110f57155602a80dca10be03852116403c9ff3cd25b079d666f2aa3df6e"
+dependencies = [
+ "winapi",
+]
+
+[[package]]
 name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3017,6 +3044,28 @@ dependencies = [
  "lazy_static",
  "libc",
  "pkg-config",
+]
+
+[[package]]
+name = "x11rb"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e8eeaf70413b8c4d3971203500cc3b505b5ef3b2f4d3d392aa7f712f850e6f9"
+dependencies = [
+ "gethostname",
+ "nix 0.25.1",
+ "winapi",
+ "winapi-wsapoll",
+ "x11rb-protocol",
+]
+
+[[package]]
+name = "x11rb-protocol"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d11c3c1f17cc0f3752a60366ea0892716168ab993c064feda43746ffe3128492"
+dependencies = [
+ "nix 0.25.1",
 ]
 
 [[package]]

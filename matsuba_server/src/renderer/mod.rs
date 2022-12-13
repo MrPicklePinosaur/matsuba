@@ -1,6 +1,9 @@
 mod gui;
 mod util;
 
+#[cfg(feature = "x11")]
+mod xorg;
+
 use log::info;
 
 use wgpu_glyph::ab_glyph::{Font, ScaleFont};
