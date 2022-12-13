@@ -17,8 +17,12 @@ Each component should be separable as it's own library.
 
 ## DEPENDENCIES
 
-- fontconfig
-- xdotool (for now)
+Currently **matsuba** only supports X11 (will expand to other platforms in
+future!). There are a couple of utilities that need to be installed for
+**matsuba** to interface with X properly.
+- xdotool
+- xmodmap
+- sqlite3
 
 ## FETCHING DICTIONARY
 
@@ -31,7 +35,6 @@ sports, names etc), you can see a full list of 'filters'
 [here](https://www.edrdg.org/jmdictdb/cgi-bin/edhelp.py?svc=jmdict&sid=#kw_fld).
 
 ## RUNNING FOR DEVELOPMENT
-
 To run the daemon
 ```
 just matsud
@@ -52,18 +55,26 @@ The project is broken up into the following crates
 
 ## TODO
 
+Roadmap to 1.0 release
 - [x] get keycodes from xmodmap
 - [x] capture all keypresses (even when not focused)
 - [x] figure out how to have floating window
 - [X] fetch kanji data from EDICT
 - [X] set up database (probably sqlite)
 - [X] arg parsing
-- [ ] glyph rendering
+- [x] glyph rendering
 - [x] make user type accepted string
 - [x] henkan + muhenkan
-- [ ] conversion menu for kanji
-- [ ] refactor to daemon + cli to manage (rpc calls)
-- [ ] utility cli to do kana conversions + kanji conversions
+- [x] conversion menu for kanji
+- [x] refactor to daemon + cli to manage (rpc calls)
+- [ ] utility cli to do kana conversions + kanji conversions + fetch daemon state
 - [ ] rewrite matsuba-fetch script as a series of command calls in matsucli
+- [ ] pass through certain keys + general qol improvements
+- [ ] config file
+- [ ] systemd, openrc and runit services for matsubad
+- [ ] package for various linux distributions (could use workflow to automatically build and package)
 
+## CONTRIBUTING
+
+Feel free to open any issues and pull requests to support development :)
 
