@@ -1,12 +1,13 @@
 // config file for matsuba
 use config::{Config, ConfigError, File};
 use lazy_static::lazy_static;
+use pino_xmodmap::KeySym;
 use serde::Deserialize;
 use winit::event::VirtualKeyCode;
 
 pub static CACHE_DIR: &str = ".cache/matsuba"; // where the database file goes
-pub const MUHENKAN_KEY: VirtualKeyCode = VirtualKeyCode::Key9;
-pub const HENKAN_KEY: VirtualKeyCode = VirtualKeyCode::Key0;
+pub const HENKAN_KEY: KeySym = KeySym::KEY_0;
+pub const MUHENKAN_KEY: KeySym = KeySym::KEY_9;
 
 lazy_static! {
     pub static ref SETTINGS: Settings = Settings::load().expect("Issue parsing config");

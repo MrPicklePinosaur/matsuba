@@ -37,7 +37,7 @@ pub fn output(out: &str) -> Result<(), OutputError> {
 fn output_x11(out: &str) -> Result<(), OutputError> {
     use std::process::Command;
     Command::new("xdotool")
-        .args(["type", "--window", "0", out])
+        .args(["type", "--window", "20", out])
         .output()
         .map_err(|e| OutputError::Xdotool(e.to_string()))?;
 

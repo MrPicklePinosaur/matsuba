@@ -14,7 +14,7 @@ path = "src/main.rs"
 [features]
 default = ["x11"]
 
-x11 = []
+x11 = ["x11rb", "pino_xmodmap"]
 
 [dependencies]
 matsuba_common = { path = "../matsuba_common" }
@@ -34,6 +34,9 @@ wgpu = "0.14"
 wgpu_glyph = "0.18"
 pino_wgpu_shape = { git = "https://github.com/MrPicklePinosaur/pino_wgpu_shape" }
 winit = "0.27"
+
+x11rb = { version = "0.11.0", features = ["render"], optional = true }
+pino_xmodmap = { version = "0.1.0", optional = true }
 
 env_logger = "0.9"
 log = "0.4"
