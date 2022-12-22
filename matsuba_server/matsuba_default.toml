@@ -1,2 +1,7 @@
 cache_dir = ".cache/matsuba"
-server.listen_address = "[::1]:10000"
+
+[server]
+listen_address = "[::1]:10000"
+
+[theme]
+bg = ""
