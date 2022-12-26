@@ -1,0 +1,17 @@
+cache_dir = ".cache/matsuba"
+
+[server]
+listen_address = "[::1]:10000"
+
+[theme]
+# color of unselected entries
+bg = "#333333"
+fg = "#FFFFFF"
+
+# color of currently selected entry
+selected_bg = "#888888"
+selected_fg = "#FFFFFF"
+
+# color of the entry to be completed
+completion_bg = "#AAAAAA"
+completion_fg = "#FFFFFF"

@@ -1,6 +1,8 @@
 use wgpu_glyph::ab_glyph::{Font, FontArc, ScaleFont};
 use winit::{event::*, window::Window};
 
+use crate::config::SETTINGS;
+
 use super::IMEState;
 
 pub(crate) struct GUIState {
@@ -106,9 +108,9 @@ impl GUIState {
 
     pub fn render(&mut self, ime_state: &IMEState) -> Result<(), wgpu::SurfaceError> {
         // TODO constants move to config later
-        let bg_color: Vector3<f32> = Vector3::new(0.1, 0.1, 0.1);
-        let cur_color: Vector3<f32> = Vector3::new(0.4, 0.4, 0.4);
-        let hl_color: Vector3<f32> = Vector3::new(0.25, 0.25, 0.25);
+        let bg_color = SETTINGS.theme.bg.as_slice_rgba();
+        let cur_color = Vector3::from(SETTINGS.theme.selected_bg.as_slice_rgb());
+        let hl_color = Vector3::from(SETTINGS.theme.completion_bg.as_slice_rgb());
 
         let output = self.surface.get_current_texture()?;
         let mut view = output
@@ -127,10 +129,10 @@ impl GUIState {
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: bg_color.x as f64,
-                        g: bg_color.y as f64,
-                        b: bg_color.z as f64,
-                        a: 1.0,
+                        r: bg_color[0] as f64,
+                        g: bg_color[1] as f64,
+                        b: bg_color[2] as f64,
+                        a: bg_color[3] as f64,
                     }),
                     store: true,
                 },
