@@ -42,7 +42,7 @@ pub struct Theme {
     pub completion_fg: Color,
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -88,6 +88,15 @@ impl Color {
     }
 }
 
+impl<'de> Deserialize<'de> for Color {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_any(ColorVisitor)
+    }
+}
+
 struct ColorVisitor;
 impl<'de> Visitor<'de> for ColorVisitor {
     type Value = Color;
@@ -96,13 +105,12 @@ impl<'de> Visitor<'de> for ColorVisitor {
         formatter.write_str("a hex color code (etc #FFFFFF or #550055FF)")
     }
 
-    /*
     fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-    where E: serde::de::Error
+    where
+        E: serde::de::Error,
     {
-
+        Color::from_hex(value).ok_or(serde::de::Error::custom("error parsing hex string"))
     }
-    */
 }
 
 /*
@@ -127,7 +135,7 @@ impl Settings {
     pub fn load() -> Result<Self, ConfigError> {
         let conf = Config::builder()
             .add_source(File::with_name("matsuba_default.toml"))
-            .add_source(File::with_name("matsuba.toml"))
+            // .add_source(File::with_name("matsuba.toml"))
             .build()?;
 
         conf.try_deserialize()
