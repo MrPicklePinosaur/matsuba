@@ -107,10 +107,12 @@ impl GUIState {
     pub fn update(&mut self) {}
 
     pub fn render(&mut self, ime_state: &IMEState) -> Result<(), wgpu::SurfaceError> {
-        // TODO constants move to config later
         let bg_color = SETTINGS.theme.bg.as_slice_rgba();
-        let cur_color = Vector3::from(SETTINGS.theme.selected_bg.as_slice_rgb());
-        let hl_color = Vector3::from(SETTINGS.theme.completion_bg.as_slice_rgb());
+        let fg_color = SETTINGS.theme.fg.as_slice_rgba();
+        let completion_bg = Vector3::from(SETTINGS.theme.completion_bg.as_slice_rgb());
+        let completion_fg = SETTINGS.theme.completion_fg.as_slice_rgba();
+        let selected_bg = Vector3::from(SETTINGS.theme.selected_bg.as_slice_rgb());
+        let selected_fg = SETTINGS.theme.selected_fg.as_slice_rgba();
 
         let output = self.surface.get_current_texture()?;
         let mut view = output
@@ -151,7 +153,7 @@ impl GUIState {
             Instance {
                 position: Vector3::new(0., 1. - 1. / columns, 0.),
                 scale: Vector3::new(1., 1. / columns, 1.),
-                color: cur_color,
+                color: completion_bg,
             },
             // conversion highlight
             Instance {
@@ -162,7 +164,7 @@ impl GUIState {
                     0.,
                 ),
                 scale: Vector3::new(1., 1. / columns, 1.),
-                color: hl_color,
+                color: selected_bg,
             },
         ];
         for instance in instances {
@@ -180,7 +182,7 @@ impl GUIState {
             screen_position: (0., 0.),
             bounds: (self.size.width as f32, self.size.height as f32),
             text: vec![wgpu_glyph::Text::new(&ime_state.output)
-                .with_color([1.0, 1.0, 1.0, 1.0])
+                .with_color(completion_fg)
                 .with_scale(self.font_scale)],
             ..wgpu_glyph::Section::default()
         });
@@ -188,11 +190,16 @@ impl GUIState {
         // draw all completions
         let scaled_font = self.font.as_scaled(self.font_scale);
         for (i, conversion) in ime_state.conversions.iter().enumerate() {
+            let text_color = if i == ime_state.selected_conversion {
+                selected_fg
+            } else {
+                fg_color
+            };
             self.glyph_brush.queue(wgpu_glyph::Section {
                 screen_position: (0., scaled_font.height() * ((i as f32) + 1.)),
                 bounds: (self.size.width as f32, self.size.height as f32),
                 text: vec![wgpu_glyph::Text::new(conversion)
-                    .with_color([1.0, 1.0, 1.0, 1.0])
+                    .with_color(text_color)
                     .with_scale(self.font_scale)],
                 ..wgpu_glyph::Section::default()
             });

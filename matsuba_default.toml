@@ -14,4 +14,4 @@ selected_fg = "#FFFFFF"
 
 # color of the entry to be completed
 completion_bg = "#AAAAAA"
-completion_fg = "#FFFFFF"
+completion_fg = "#333333"
