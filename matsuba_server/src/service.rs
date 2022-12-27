@@ -95,6 +95,7 @@ impl Matsuba for MatsubaService {
         &self,
         _request: Request<GetStateRequest>,
     ) -> Result<Response<GetStateResponse>, Status> {
+        unimplemented!();
         Ok(Response::new(GetStateResponse { henkan: true }))
     }
 
@@ -102,6 +103,7 @@ impl Matsuba for MatsubaService {
         &self,
         _request: Request<SetStateHenkanRequest>,
     ) -> Result<Response<SetStateHenkanResponse>, Status> {
+        unimplemented!();
         Ok(Response::new(SetStateHenkanResponse {}))
     }
 
@@ -109,6 +111,7 @@ impl Matsuba for MatsubaService {
         &self,
         _request: Request<SetStateMuhenkanRequest>,
     ) -> Result<Response<SetStateMuhenkanResponse>, Status> {
+        unimplemented!();
         Ok(Response::new(SetStateMuhenkanResponse {}))
     }
 }
