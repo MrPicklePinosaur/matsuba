@@ -5,7 +5,6 @@ use pino_xmodmap::KeySym;
 use serde::{de::Visitor, Deserialize};
 use winit::event::VirtualKeyCode;
 
-pub static CACHE_DIR: &str = ".cache/matsuba"; // where the database file goes
 pub const HENKAN_KEY: KeySym = KeySym::KEY_0;
 pub const MUHENKAN_KEY: KeySym = KeySym::KEY_9;
 

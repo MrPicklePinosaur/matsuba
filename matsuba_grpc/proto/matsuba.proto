@@ -19,6 +19,16 @@ message GetStateResponse {
     bool henkan = 1;
 }
 
+message SetStateHenkanRequest {
+}
+message SetStateHenkanResponse {
+}
+
+message SetStateMuhenkanRequest {
+}
+message SetStateMuhenkanResponse {
+}
+
 message FetchRequest {
     string database_path = 1;
     repeated string tags = 2;
@@ -29,6 +39,8 @@ message FetchResponse {
 service Matsuba {
     rpc Convert(ConvertRequest) returns (ConvertResponse);
     rpc GetState(GetStateRequest) returns (GetStateResponse);
+    rpc SetStateHenkan(SetStateHenkanRequest) returns (SetStateHenkanResponse);
+    rpc SetStateMuhenkan(SetStateMuhenkanRequest) returns (SetStateMuhenkanResponse);
     rpc Fetch(FetchRequest) returns (FetchResponse);
 }
 
