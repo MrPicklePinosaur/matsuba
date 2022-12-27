@@ -39,6 +39,6 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ env.zip_name }}.zip
-          asset_name: ${{ env.zip_name }}-linux-${{ steps.get_version.outputs.tag }}.zip
+          asset_name: ${{ env.zip_name }}-linux.zip
           tag: ${{ github.ref }}
           overwrite: true
