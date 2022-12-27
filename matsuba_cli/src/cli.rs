@@ -33,9 +33,8 @@ USAGE:
 matsucli [-v] <command>
 
 COMMANDS:
-run
 fetch <word-lists>
-state <query>
+state <subcommand>
 convert <phrase>
 ";
 // state is for getting info about the daemon
@@ -48,18 +47,6 @@ pub fn runcli() -> BoxResult<()> {
         program_name: "matsucli",
         synopsis: "simple japanese ime",
         subcommands: vec![
-            Command {
-                command_name: "run",
-                desc: "run matsuba daemon",
-                handler: handle_run,
-                flags: vec![],
-            },
-            Command {
-                command_name: "unlock",
-                desc: "removes lock in the event of a crash",
-                handler: handle_unlock,
-                flags: vec![],
-            },
             Command {
                 command_name: "fetch",
                 desc: "fetch word lists",
@@ -98,14 +85,6 @@ pub fn runcli() -> BoxResult<()> {
     cli.run(&args)?;
 
     Ok(())
-}
-
-fn handle_run(_flagparse: FlagParse) -> BoxResult<()> {
-    todo!()
-}
-
-fn handle_unlock(_flagparse: FlagParse) -> BoxResult<()> {
-    todo!()
 }
 
 fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
@@ -166,8 +145,12 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
                 result_count: flagparse.get_flag_value::<usize>("count").unwrap_or(1) as i32,
             }))
             .await
-            .unwrap();
-        debug!("{:?}", response);
+            .unwrap()
+            .into_inner();
+
+        for converted in response.converted {
+            println!("{}", converted);
+        }
     });
     Ok(())
 }

@@ -1,0 +1,44 @@
+name: Release
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+env:
+  zip_name: matsuba
+  server_binary: matsud
+  cli_binary: matsucli
+
+jobs:
+  release_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: little-core-labs/get-git-tag@v3.0.1
+        id: get_version
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+          override: true
+      - name: Build
+        run: |
+          cargo build --release --target x86_64-unknown-linux-gnu
+      - name: Prepare package
+        run: |
+          mkdir linux
+          cp target/x86_64-unknown-linux-gnu/release/${{ env.server_binary }} linux/
+          cp target/x86_64-unknown-linux-gnu/release/${{ env.cli_binary }} linux/
+      - name: Package as a zip
+        uses: vimtor/action-zip@v1
+        with:
+          files: linux
+          dest: ${{ env.zip_name }}.zip
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ env.zip_name }}.zip
+          asset_name: ${{ env.zip_name }}-linux-${{ steps.get_version.outputs.tag }}.zip
+          tag: ${{ github.ref }}
+          overwrite: true
