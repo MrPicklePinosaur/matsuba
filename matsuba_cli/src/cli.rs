@@ -1,6 +1,6 @@
-use log::debug;
+use log::{debug, info};
 use matsuba_grpc::matsuba_client::MatsubaClient;
-use matsuba_grpc::{ConvertRequest, FetchRequest};
+use matsuba_grpc::{ConvertRequest, FetchRequest, GetStateRequest, SetStateHenkanRequest};
 use pino_argparse::{Cli, Command, Flag, FlagParse};
 use tonic::Request;
 
@@ -85,12 +85,9 @@ pub fn runcli() -> BoxResult<()> {
             },
             Command {
                 command_name: "state",
-                desc: "query and mutate state of matsuba",
+                desc: "query state of matsuba",
                 handler: handle_state,
-                flags: vec![
-                    Flag::new("henkan").short('h').desc("enable conversion"),
-                    Flag::new("muhenkan").short('H').desc("disable conversion"),
-                ],
+                flags: vec![],
             },
         ],
         global_flags: vec![],
@@ -175,6 +172,50 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
     Ok(())
 }
 
-fn handle_state(_flagparse: FlagParse) -> BoxResult<()> {
-    todo!()
+fn handle_state(flagparse: FlagParse) -> BoxResult<()> {
+    enum Mode {
+        Get,
+        Henkan,
+        Muhenkan,
+    }
+
+    let mode = if flagparse.args.len() == 0 {
+        Mode::Get
+    } else {
+        match flagparse.args.get(0).unwrap().as_str() {
+            "henkan" => Mode::Henkan,
+            "muhenkan" => Mode::Muhenkan,
+            "get" => Mode::Get,
+            _ => {
+                // TODO proper error handle
+                return Ok(());
+            }
+        }
+    };
+
+    Runtime::new()?.block_on(async {
+        let mut client = MatsubaClient::connect(CONNECTION_STRING).await.unwrap();
+
+        match mode {
+            Mode::Get => {
+                let response = client
+                    .get_state(Request::new(GetStateRequest {}))
+                    .await
+                    .unwrap();
+
+                debug!("{:?}", response);
+            }
+            Mode::Henkan => {
+                let response = client
+                    .set_state_henkan(Request::new(SetStateHenkanRequest {}))
+                    .await
+                    .unwrap();
+
+                debug!("{:?}", response);
+            }
+            _ => {}
+        }
+    });
+
+    Ok(())
 }

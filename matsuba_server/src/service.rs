@@ -1,7 +1,9 @@
 use matsuba_grpc::matsuba_server::Matsuba;
 pub use matsuba_grpc::matsuba_server::MatsubaServer;
 use matsuba_grpc::{
-    ConvertRequest, ConvertResponse, FetchRequest, FetchResponse, GetStateRequest, GetStateResponse,
+    ConvertRequest, ConvertResponse, FetchRequest, FetchResponse, GetStateRequest,
+    GetStateResponse, SetStateHenkanRequest, SetStateHenkanResponse, SetStateMuhenkanRequest,
+    SetStateMuhenkanResponse,
 };
 use std::collections::HashSet;
 use tonic::{Code, Request, Response, Status};
@@ -60,13 +62,6 @@ impl Matsuba for MatsubaService {
         Ok(Response::new(ConvertResponse { converted }))
     }
 
-    async fn get_state(
-        &self,
-        _request: Request<GetStateRequest>,
-    ) -> Result<Response<GetStateResponse>, Status> {
-        Ok(Response::new(GetStateResponse { henkan: true }))
-    }
-
     async fn fetch(
         &self,
         request: Request<FetchRequest>,
@@ -94,5 +89,29 @@ impl Matsuba for MatsubaService {
             .or(Err(Status::new(Code::Internal, "issue parsing dict")))?;
 
         Ok(Response::new(FetchResponse {}))
+    }
+
+    async fn get_state(
+        &self,
+        _request: Request<GetStateRequest>,
+    ) -> Result<Response<GetStateResponse>, Status> {
+        unimplemented!();
+        Ok(Response::new(GetStateResponse { henkan: true }))
+    }
+
+    async fn set_state_henkan(
+        &self,
+        _request: Request<SetStateHenkanRequest>,
+    ) -> Result<Response<SetStateHenkanResponse>, Status> {
+        unimplemented!();
+        Ok(Response::new(SetStateHenkanResponse {}))
+    }
+
+    async fn set_state_muhenkan(
+        &self,
+        _request: Request<SetStateMuhenkanRequest>,
+    ) -> Result<Response<SetStateMuhenkanResponse>, Status> {
+        unimplemented!();
+        Ok(Response::new(SetStateMuhenkanResponse {}))
     }
 }
