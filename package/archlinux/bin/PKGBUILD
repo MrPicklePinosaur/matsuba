@@ -9,12 +9,14 @@ license=('MIT' 'Apache')
 groups=()
 provides=(matsud matsucli)
 depends=()
-optdepends=()
+makedepends=(cargo)
+optdepends=(xdotool xmodmap sqlite3)
 source=("$url/releases/download/v${pkgver}/matsuba-linux.zip")
 md5sums=('SKIP')
 
 package() {
     install -Dm755 matsud "${pkgdir}/usr/bin/matsud"
     install -Dm755 matsucli "${pkgdir}/usr/bin/matsucli"
+    install -Dm644 matsuba_default.toml "${pkgdir}/usr/share/matsuba/matsuba_default.toml"
 }
 
