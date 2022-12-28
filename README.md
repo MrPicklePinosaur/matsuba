@@ -4,6 +4,10 @@
 
 lightweight japanese IME written in rust
 
+[![book](https://img.shields.io/badge/book-website-orange)](#)
+[![build](https://github.com/MrPicklePinosaur/matsuba/workflows/Release/badge.svg)](https://github.com/MrPicklePinosaur/matsuba/actions)
+[![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](#)
+
 </div>
 
 **matsuba** - a lightweight japanese ime for x written in rust. This project
@@ -15,7 +19,7 @@ has three main components:
 
 Each component should be separable as it's own library.
 
-## DEPENDENCIES
+## INSTALLATION
 
 Currently **matsuba** only supports X11 (will expand to other platforms in
 future!). There are a couple of utilities that need to be installed for
@@ -23,6 +27,9 @@ future!). There are a couple of utilities that need to be installed for
 - xdotool
 - xmodmap
 - sqlite3
+
+**matsuba** is packaged for the following linux distributions
+- arch linux (and friends) via AUR
 
 ## FETCHING DICTIONARY
 
