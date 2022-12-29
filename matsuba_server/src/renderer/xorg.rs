@@ -17,6 +17,7 @@ pub enum XorgError {
     ConnectionFailure,
     Keytable,
     KeyboardGrabFailed,
+    NoKeyRecieved,
 }
 
 impl Error for XorgError {}
@@ -26,6 +27,7 @@ impl Display for XorgError {
             Self::ConnectionFailure => write!(f, "could not connect to x server"),
             Self::Keytable => write!(f, "failed initializing key table"),
             Self::KeyboardGrabFailed => write!(f, "could not grab keyboard"),
+            Self::NoKeyRecieved => write!(f, "no valid keypress recieved"),
         }
     }
 }
@@ -55,23 +57,19 @@ impl XSession {
 
     pub fn handle_keypress(
         &self,
-    ) -> Result<Option<(Modifier, KeySym)>, Box<dyn std::error::Error>> {
+    ) -> Result<(u8, KeyButMask), Box<dyn std::error::Error>> {
         self.conn.flush()?;
 
         if let Some(event) = self.conn.poll_for_event()? {
             match event {
                 Event::KeyPress(event) => {
-                    // extract key press info
-                    let modifier = x_to_xmodmap_modifier(event.state);
-                    let keysym = self.keytable.get_keysym(modifier.clone(), event.detail)?;
-
-                    return Ok(Some((modifier, keysym)));
+		    return Ok((event.detail, event.state))
                 }
                 _ => {}
             }
         }
 
-        Ok(None)
+        Err(Box::new(XorgError::NoKeyRecieved))
     }
 
     pub fn configure_root(&self) -> Result<(), Box<dyn std::error::Error>> {

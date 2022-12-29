@@ -3,7 +3,7 @@ mod util;
 
 #[cfg(feature = "x11")]
 mod xorg;
-use pino_utils::some_or_return;
+use pino_utils::ok_or_return;
 use pino_xmodmap::{KeySym, Modifier};
 
 use log::{error, info};
@@ -112,7 +112,7 @@ pub async fn run() {
         } => {}
         _ => {
             // now run our own keyboard code
-            let (modifier, keysym) = some_or_return!(xsession.handle_keypress().unwrap());
+            let (key, modifier) = ok_or_return!(xsession.handle_keypress());
 
             if !ime_state.henkan {
                 match keysym {
@@ -240,6 +240,11 @@ pub async fn run() {
                         update_size(&gui_state, &ime_state, &window);
                     }
                     _ => {
+			// // extract key press info
+			// let modifier = x_to_xmodmap_modifier(event.state);
+			// let keysym = self.keytable.get_keysym(modifier.clone(), event.detail)?;
+
+			// return Ok(Some((modifier, keysym)));
                         // otherwise feed input directly to converter
                         if let Some(c) = keysym.as_char() {
                             // TODO fix pino_xmodmap library to not return null characters

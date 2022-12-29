@@ -1,8 +1,9 @@
 // config file for matsuba
 use config::{Config, ConfigError, File};
 use lazy_static::lazy_static;
-use pino_xmodmap::KeySym;
+use pino_xmodmap::{KeySym, KeyTable, Modifier, FromStr};
 use serde::{de::Visitor, Deserialize};
+use x11rb::protocol::xproto::KeyButMask;
 
 pub const HENKAN_KEY: KeySym = KeySym::KEY_0;
 pub const MUHENKAN_KEY: KeySym = KeySym::KEY_9;
@@ -116,23 +117,80 @@ impl<'de> Visitor<'de> for ColorVisitor {
     }
 }
 
-/*
 #[derive(Debug, Deserialize)]
 pub struct KeyMap {
     /// Toggle conversion mode on
-    pub henkan: VirtualKeyCode,
+    pub henkan: Keybinding,
     /// Toggle conversion mode off
-    pub muhenkan: VirtualKeyCode,
+    pub muhenkan: Keybinding,
     /// Accept currently selected conversion
-    pub accept: VirtualKeyCode,
+    pub accept: Keybinding,
     /// Abort currently selected conversions
-    pub cancel: VirtualKeyCode,
+    pub cancel: Keybinding,
     /// Cycle to the next conversion
-    pub next_conversion: VirtualKeyCode,
+    pub next_conversion: Keybinding,
     /// Cycle to the previous conversion
-    pub prev_conversion: VirtualKeyCode,
+    pub prev_conversion: Keybinding,
 }
-*/
+
+#[derive(Debug)]
+pub enum KeybindingError {
+    TooShort,
+    InvalidModifier(String),
+    InvalidKey(String),
+    Xmodmap(String),
+}
+
+impl std::error::Error for KeybindingError {}
+impl std::fmt::Display for KeybindingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::TooShort => write!(f, "keybinding string too short"),
+	    Self::InvalidModifier(m) => write!(f, "invalid modifier recieved {}", m),
+	    Self::Xmodmap(e) => write!(f, "issue initializing xmodmap {:?}", e),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Keybinding {
+    pub mod_mask: KeyButMask,
+    pub key: KeySym,
+}
+
+impl Keybinding {
+
+    pub fn from_str(key_str: &str) -> Result<Self, KeybindingError> {
+
+	let mut mods = key_str.split("-").filter(|&s| !s.is_empty()).collect::<Vec<_>>();
+
+	if mods.is_empty() {
+	    return Err(KeybindingError::TooShort);
+	}
+	let raw_key = mods.pop().unwrap();
+	let key = KeySym::from_str(raw_key).map_err(|_| KeybindingError::InvalidKey(raw_key.to_owned()))?;
+
+	let mut mod_mask = KeyButMask::default();
+
+	for modifier in mods {
+	    match modifier {
+		"M" => { mod_mask = mod_mask|KeyButMask::MOD1; },
+		"S" => { mod_mask = mod_mask|KeyButMask::SHIFT; },
+		"C" => { mod_mask = mod_mask|KeyButMask::CONTROL; },
+		_ => {
+		    return Err(KeybindingError::InvalidModifier(modifier.to_owned()));
+		},
+	    }
+	}
+
+        let keytable = KeyTable::new().map_err(|e| KeybindingError::Xmodmap(e.to_string()))?;
+
+	Ok(Self {
+	    mod_mask,
+	    key
+	})
+    }
+}
 
 impl Settings {
     pub fn load() -> Result<Self, ConfigError> {
@@ -162,5 +220,10 @@ mod tests {
         use super::Color;
 
         println!("{:?}", Color::from_hex("#ABCDEF"));
+    }
+
+    #[test]
+    fn keybinding_test() {
+	
     }
 }
