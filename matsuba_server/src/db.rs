@@ -32,7 +32,7 @@ pub fn get_connection() -> Result<Connection> {
 pub fn init(conn: &Connection) -> Result<()> {
     conn.execute(
         "
-        CREATE TABLE entry (
+        CREATE TABLE IF NOT EXISTS entry (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             r_ele TEXT NOT NULL,
             k_ele TEXT NOT NULL,

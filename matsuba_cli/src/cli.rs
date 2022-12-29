@@ -97,7 +97,11 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
     let tag_options = flagparse
         .get_flag_value::<String>("tags")
         .unwrap_or_default();
+
     for option in tag_options.split(',') {
+        if option.is_empty() {
+            continue;
+        }
         let (mode, tag) = option.split_at(1);
         if tag.is_empty() {
             return Err(Box::new(CliError::InvalidTag(tag.to_owned())));

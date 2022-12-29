@@ -85,9 +85,16 @@ impl Matsuba for MatsubaService {
             tags.insert(tag);
         }
 
+        let tempfile_path = std::path::Path::new(&SETTINGS.database.cache_dir).join("JMdict_e.gz");
         let dict_path = std::path::Path::new(&SETTINGS.database.cache_dir).join("dict.xml"); // TODO is this dangerous?
-        xmlparse::fetch_jmdict_xml(&dict_path)
-            .or(Err(Status::new(Code::Internal, "issue fetching dict")))?;
+
+        match xmlparse::fetch_jmdict_xml(&tempfile_path, &dict_path).await {
+            Ok(()) => (),
+            Err(e) => {
+                log::error!("{}", e);
+                return Err(Status::new(Code::Internal, "issue fetching dict"));
+            }
+        }
 
         xmlparse::parse_jmdict_xml(&mut conn, &dict_path, &tags)
             .or(Err(Status::new(Code::Internal, "issue parsing dict")))?;
