@@ -1,4 +1,3 @@
-use flate2::bufread::DeflateDecoder;
 use roxmltree::{Document, Node, ParsingOptions};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;

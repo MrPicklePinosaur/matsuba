@@ -33,12 +33,11 @@ USAGE:
 matsucli [-v] <command>
 
 COMMANDS:
+help
 fetch
-state <subcommand>
+state <get|henkan|muhenkan>
 convert <phrase>
 ";
-// state is for getting info about the daemon
-// like current kana mode etc (useful for scripts)
 
 static CONNECTION_STRING: &str = "http://[::1]:10000";
 
@@ -47,6 +46,12 @@ pub fn runcli() -> BoxResult<()> {
         program_name: "matsucli",
         synopsis: "simple japanese ime",
         subcommands: vec![
+            Command {
+                command_name: "help",
+                desc: "display help message",
+                handler: handle_help,
+                flags: vec![],
+            },
             Command {
                 command_name: "fetch",
                 desc: "fetch word lists",
@@ -84,6 +89,11 @@ pub fn runcli() -> BoxResult<()> {
     let args = std::env::args().collect();
     cli.run(&args)?;
 
+    Ok(())
+}
+
+fn handle_help(_flagparse: FlagParse) -> BoxResult<()> {
+    println!("{}", HELP_MSG);
     Ok(())
 }
 
@@ -157,6 +167,10 @@ fn handle_convert(flagparse: FlagParse) -> BoxResult<()> {
 }
 
 fn handle_state(flagparse: FlagParse) -> BoxResult<()> {
+    eprintln!("State is currently unimplemented.");
+
+    return Ok(());
+
     enum Mode {
         Get,
         Henkan,

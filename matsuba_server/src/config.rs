@@ -3,7 +3,6 @@ use config::{Config, ConfigError, File};
 use lazy_static::lazy_static;
 use pino_xmodmap::KeySym;
 use serde::{de::Visitor, Deserialize};
-use winit::event::VirtualKeyCode;
 
 pub const HENKAN_KEY: KeySym = KeySym::KEY_0;
 pub const MUHENKAN_KEY: KeySym = KeySym::KEY_9;
@@ -61,7 +60,7 @@ impl Color {
 
     pub fn from_hex(hexstring: &str) -> Option<Self> {
         // strip leading # if provided
-        let hexstring = hexstring.trim_start_matches("#");
+        let hexstring = hexstring.trim_start_matches('#');
 
         if hexstring.len() != 6 && hexstring.len() != 8 {
             return None;

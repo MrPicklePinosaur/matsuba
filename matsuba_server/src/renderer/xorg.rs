@@ -1,13 +1,13 @@
 use crate::config::HENKAN_KEY;
-use pino_xmodmap::{Key, KeySym, KeyTable, Modifier};
-use std::process::Command;
+use pino_xmodmap::{KeySym, KeyTable, Modifier};
+
 use std::{
     error::Error,
     fmt::{Debug, Display},
 };
 use x11rb::{
     connection::Connection,
-    protocol::{render::*, xproto::*, Event},
+    protocol::{xproto::*, Event},
     rust_connection::RustConnection,
     CURRENT_TIME,
 };
@@ -87,7 +87,7 @@ impl XSession {
     }
 
     pub fn grab_keyboard(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let (henkan_mod, henkan_keysym) = self.keytable.get_key(HENKAN_KEY)?;
+        let (_henkan_mod, _henkan_keysym) = self.keytable.get_key(HENKAN_KEY)?;
         // ungrab_key(&self.conn, henkan_keysym, self.screen().root, ModMask::ANY)?.check()?;
 
         // grab user keypresses

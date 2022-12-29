@@ -74,12 +74,12 @@ Roadmap to 1.0 release
 - [x] henkan + muhenkan
 - [x] conversion menu for kanji
 - [x] refactor to daemon + cli to manage (rpc calls)
-- [ ] utility cli to do kana conversions + kanji conversions + fetch daemon state
-- [ ] rewrite matsuba-fetch script as a series of command calls in matsucli
+- [x] utility cli to do kana conversions + kanji conversions + fetch daemon state
+- [x] rewrite matsuba-fetch script as a series of command calls in matsucli
 - [ ] pass through certain keys + general qol improvements
-- [ ] config file
+- [x] config file
 - [ ] systemd, openrc and runit services for matsubad
-- [ ] package for various linux distributions (could use workflow to automatically build and package)
+- [x] package for various linux distributions (could use workflow to automatically build and package)
 
 ## CONTRIBUTING
 

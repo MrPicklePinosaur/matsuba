@@ -3,7 +3,7 @@ mod util;
 
 #[cfg(feature = "x11")]
 mod xorg;
-use pino_utils::{some_or_continue, some_or_return};
+use pino_utils::some_or_return;
 use pino_xmodmap::{KeySym, Modifier};
 
 use log::{error, info};
@@ -11,7 +11,7 @@ use log::{error, info};
 use wgpu_glyph::ab_glyph::{Font, ScaleFont};
 use winit::{
     dpi::{LogicalSize, PhysicalSize},
-    event::{ElementState, *},
+    event::*,
     event_loop::{ControlFlow, EventLoop},
     platform::unix::WindowBuilderExtUnix,
     window::{Window, WindowBuilder},
@@ -24,8 +24,6 @@ use crate::{
 use crate::{output, renderer::gui::GUIState};
 
 use matsuba_common::converter::Converter;
-
-use self::util::Key;
 
 pub(crate) struct IMEState {
     pub selected_conversion: usize,
@@ -110,7 +108,7 @@ pub async fn run() {
         }
         Event::DeviceEvent {
             device_id: _,
-            event,
+            event: _,
         } => {}
         _ => {
             // now run our own keyboard code

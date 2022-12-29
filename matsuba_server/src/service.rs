@@ -14,17 +14,7 @@ use crate::config::SETTINGS;
 
 use super::{db, xmlparse};
 
-pub struct MatsubaService {
-    // pub xsession: x::XSession
-}
-
-impl MatsubaService {
-    /*
-    pub fn new() {
-
-    }
-    */
-}
+pub struct MatsubaService {}
 
 #[tonic::async_trait]
 impl Matsuba for MatsubaService {

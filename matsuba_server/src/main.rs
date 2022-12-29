@@ -6,7 +6,7 @@ mod renderer;
 mod service;
 mod xmlparse;
 
-use log::{debug, info};
+use log::info;
 use tonic::transport::Server;
 
 use crate::service::{MatsubaServer, MatsubaService};
