@@ -1,0 +1,11 @@
+[book]
+title = "matsuba documentation"
+authors = ["MrPicklePinosaur"]
+description = "User and developer documentation for matsuba"
+language = "en"
+multilingual = true
+src = "src"
+
+[output.html]
+default-theme = "light"
+git-repository-url = "https://github.com/MrPicklePinosaur/matsuba"
