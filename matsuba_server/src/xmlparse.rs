@@ -2,6 +2,7 @@ use roxmltree::{Document, Node, ParsingOptions};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt::Display;
+use std::io::{Read, Write};
 use std::path::Path;
 use std::vec::Vec;
 
@@ -14,15 +15,42 @@ use crate::error::BoxResult;
 
 #[derive(Debug)]
 pub enum XmlError {
+    Fetch(String),
     KebNotExist,
 }
 impl Error for XmlError {}
 impl Display for XmlError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Fetch(e) => write!(f, "fetch error: {:?}", e),
             Self::KebNotExist => write!(f, "keb does not exist"),
         }
     }
+}
+
+/// Downloads jmdict
+pub fn fetch_jmdict_xml(target_path: &Path) -> Result<(), XmlError> {
+    use flate2::read::GzDecoder;
+    use std::fs::File;
+
+    const DICT_URL: &str = "http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz";
+
+    let body = reqwest::blocking::get(DICT_URL)
+        .map_err(|e| XmlError::Fetch(e.to_string()))?
+        .text()
+        .map_err(|e| XmlError::Fetch(e.to_string()))?;
+
+    // unzip
+    let mut d = GzDecoder::new(body.as_bytes());
+    let mut decoded = String::new();
+    d.read_to_string(&mut decoded)
+        .map_err(|e| XmlError::Fetch(e.to_string()))?;
+
+    let mut file = File::create(target_path).map_err(|e| XmlError::Fetch(e.to_string()))?;
+    file.write_all(decoded.as_bytes())
+        .map_err(|e| XmlError::Fetch(e.to_string()))?;
+
+    Ok(())
 }
 
 pub fn parse_jmdict_xml(

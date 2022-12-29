@@ -30,7 +30,6 @@ message SetStateMuhenkanResponse {
 }
 
 message FetchRequest {
-    string database_path = 1;
     repeated string tags = 2;
 }
 message FetchResponse {
