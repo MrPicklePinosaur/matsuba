@@ -1,5 +1,3 @@
-cache_dir = ".cache/matsuba"
-
 [server]
 listen_address = "[::1]:10000"
 
@@ -15,3 +13,6 @@ selected_fg = "#FFFFFF"
 # color of the entry to be completed
 completion_bg = "#AAAAAA"
 completion_fg = "#333333"
+
+[database]
+cache_dir = "/home/pinosaur/.config/matsuba"

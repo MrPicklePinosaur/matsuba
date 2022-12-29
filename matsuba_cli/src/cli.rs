@@ -33,7 +33,7 @@ USAGE:
 matsucli [-v] <command>
 
 COMMANDS:
-fetch <word-lists>
+fetch
 state <subcommand>
 convert <phrase>
 ";
@@ -88,7 +88,7 @@ pub fn runcli() -> BoxResult<()> {
 }
 
 fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
-    if flagparse.args.is_empty() {
+    if !flagparse.args.is_empty() {
         return Err(Box::new(CliError::WrongArgCount));
     }
 
@@ -97,7 +97,11 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
     let tag_options = flagparse
         .get_flag_value::<String>("tags")
         .unwrap_or_default();
+
     for option in tag_options.split(',') {
+        if option.is_empty() {
+            continue;
+        }
         let (mode, tag) = option.split_at(1);
         if tag.is_empty() {
             return Err(Box::new(CliError::InvalidTag(tag.to_owned())));
@@ -122,10 +126,7 @@ fn handle_fetch(flagparse: FlagParse) -> BoxResult<()> {
         let mut client = MatsubaClient::connect(CONNECTION_STRING).await.unwrap();
 
         let _response = client
-            .fetch(Request::new(FetchRequest {
-                tags,
-                database_path: flagparse.args[0].clone(),
-            }))
+            .fetch(Request::new(FetchRequest { tags }))
             .await
             .unwrap();
     });

@@ -10,6 +10,8 @@ use tonic::{Code, Request, Response, Status};
 
 use matsuba_common::converter::Converter;
 
+use crate::config::SETTINGS;
+
 use super::{db, xmlparse};
 
 pub struct MatsubaService {
@@ -77,15 +79,24 @@ impl Matsuba for MatsubaService {
             "failed initializing database",
         )))?;
 
-        let path = std::path::Path::new(&request.database_path); // TODO is this dangerous?
-
         // TODO stupid how we convert hashset to vec and then back to hashset
         let mut tags: HashSet<&str> = HashSet::new();
         for tag in &request.tags {
             tags.insert(tag);
         }
 
-        xmlparse::parse_jmdict_xml(&mut conn, path, &tags)
+        let tempfile_path = std::path::Path::new(&SETTINGS.database.cache_dir).join("JMdict_e.gz");
+        let dict_path = std::path::Path::new(&SETTINGS.database.cache_dir).join("dict.xml"); // TODO is this dangerous?
+
+        match xmlparse::fetch_jmdict_xml(&tempfile_path, &dict_path).await {
+            Ok(()) => (),
+            Err(e) => {
+                log::error!("{}", e);
+                return Err(Status::new(Code::Internal, "issue fetching dict"));
+            }
+        }
+
+        xmlparse::parse_jmdict_xml(&mut conn, &dict_path, &tags)
             .or(Err(Status::new(Code::Internal, "issue parsing dict")))?;
 
         Ok(Response::new(FetchResponse {}))

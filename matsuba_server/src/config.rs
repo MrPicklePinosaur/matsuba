@@ -15,9 +15,9 @@ lazy_static! {
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     // pub keys: KeyMap
-    pub cache_dir: String,
     pub server: Server,
     pub theme: Theme,
+    pub database: Database,
 }
 
 #[derive(Debug, Deserialize)]
@@ -39,6 +39,11 @@ pub struct Theme {
     pub completion_bg: Color,
     /// Text color for the completion
     pub completion_fg: Color,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Database {
+    pub cache_dir: String,
 }
 
 #[derive(Debug, Default)]

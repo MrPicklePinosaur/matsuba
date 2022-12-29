@@ -1,5 +1,9 @@
+use std::path::Path;
+
 use rusqlite::Connection;
 use rusqlite::{params, Result};
+
+use crate::config::SETTINGS;
 
 pub type DBConnection = Connection;
 
@@ -21,14 +25,14 @@ impl Entry {
 }
 
 pub fn get_connection() -> Result<Connection> {
-    // TODO make this config variable
-    Connection::open("./db/matsuba.db3")
+    let db_path = Path::new(&SETTINGS.database.cache_dir).join("dict.db3");
+    Connection::open(db_path.to_str().unwrap())
 }
 
 pub fn init(conn: &Connection) -> Result<()> {
     conn.execute(
         "
-        CREATE TABLE entry (
+        CREATE TABLE IF NOT EXISTS entry (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             r_ele TEXT NOT NULL,
             k_ele TEXT NOT NULL,
