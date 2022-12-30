@@ -19,7 +19,7 @@ use winit::{
 use x11rb::protocol::xproto::KeyButMask;
 
 use crate::{
-    config::{Keybinding, HENKAN_KEY, MUHENKAN_KEY, SETTINGS},
+    config::{Keybinding, SETTINGS},
     db,
 };
 use crate::{output, renderer::gui::GUIState};
@@ -120,23 +120,13 @@ pub async fn run() {
             };
 
             if !ime_state.henkan {
-                // TODO use actual keybinding
-                let henkan = Keybinding {
-                    mod_mask: KeyButMask::default(),
-                    key: KeySym::KEY_0,
-                };
-                if keybinding == henkan {
+                if keybinding.matches(&SETTINGS.keys.henkan) {
                     info!("henkan");
                     ime_state.henkan = true;
                     xsession.grab_keyboard().expect("could not grab kb");
                 }
             } else {
-                let muhenkan = Keybinding {
-                    mod_mask: KeyButMask::default(),
-                    key: KeySym::KEY_9,
-                };
-
-                if keybinding == muhenkan {
+                if keybinding.matches(&SETTINGS.keys.muhenkan) {
                     info!("muhenkan");
                     ime_state.henkan = false;
 
@@ -151,7 +141,7 @@ pub async fn run() {
 
                     ime_state.output = String::new();
                     window.set_visible(false);
-                } else if keybinding == SETTINGS.keys.accept {
+                } else if keybinding.matches(&SETTINGS.keys.accept) {
                     info!("accepting: {}", converter.output);
 
                     xsession.ungrab_keyboard().unwrap();
@@ -176,7 +166,7 @@ pub async fn run() {
 
                     ime_state.output = String::new();
                     window.set_visible(false);
-                } else if keybinding == SETTINGS.keys.delete {
+                } else if keybinding.matches(&SETTINGS.keys.delete) {
                     converter.del_char();
 
                     // we changed input so clear conversions
@@ -190,7 +180,7 @@ pub async fn run() {
                     if ime_state.output.is_empty() {
                         window.set_visible(false);
                     }
-                } else if keybinding == SETTINGS.keys.cancel {
+                } else if keybinding.matches(&SETTINGS.keys.cancel) {
                     if ime_state.conversions.is_empty() {
                         // if conversion already empty, close conversion window and reset entire conversion
 
@@ -209,19 +199,19 @@ pub async fn run() {
                         // bring back raw kana
                         ime_state.output = converter.output.clone();
                     }
-                } else if keybinding == SETTINGS.keys.next_conversion
-                    || keybinding == SETTINGS.keys.prev_conversion
+                } else if keybinding.matches(&SETTINGS.keys.next_conversion)
+                    || keybinding.matches(&SETTINGS.keys.prev_conversion)
                 {
                     // conversion already done, cycle through options
                     if !ime_state.conversions.is_empty() {
-                        if keybinding == SETTINGS.keys.next_conversion {
-                            ime_state.selected_conversion =
-                                (ime_state.selected_conversion + 1) % (ime_state.conversions.len());
-                        } else if keybinding == SETTINGS.keys.prev_conversion {
+                        if keybinding.matches(&SETTINGS.keys.prev_conversion) {
                             ime_state.selected_conversion =
                                 (ime_state.selected_conversion + ime_state.conversions.len() - 1)
                                     % (ime_state.conversions.len());
-                        };
+                        } else if keybinding.matches(&SETTINGS.keys.next_conversion) {
+                            ime_state.selected_conversion =
+                                (ime_state.selected_conversion + 1) % (ime_state.conversions.len());
+                        }
                         info!("new index {}", ime_state.selected_conversion);
                     } else {
                         // conversion not done, populate conversion options list
@@ -248,7 +238,7 @@ pub async fn run() {
                     update_size(&gui_state, &ime_state, &window);
                 } else {
                     // otherwise feed input directly to converter
-                    if let Some(c) = keysym.as_char() {
+                    if let Ok(c) = char::try_from(keysym) {
                         // TODO fix pino_xmodmap library to not return null characters
                         if c != '\0' {
                             converter.input_char(c);

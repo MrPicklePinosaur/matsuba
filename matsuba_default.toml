@@ -2,8 +2,8 @@
 listen_address = "[::1]:10000"
 
 [keys]
-henkan = "C-,"
-muhenkan = "C-."
+henkan = "C-comma"
+muhenkan = "C-period"
 accept = "Return"
 delete = "BackSpace"
 cancel = "Escape"

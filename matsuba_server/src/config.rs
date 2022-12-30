@@ -5,9 +5,6 @@ use pino_xmodmap::{FromStr, KeySym, KeyTable, Modifier};
 use serde::{de::Visitor, Deserialize};
 use x11rb::protocol::xproto::KeyButMask;
 
-pub const HENKAN_KEY: KeySym = KeySym::KEY_0;
-pub const MUHENKAN_KEY: KeySym = KeySym::KEY_9;
-
 lazy_static! {
     pub static ref SETTINGS: Settings = Settings::load().expect("Issue parsing config");
 }
@@ -119,12 +116,10 @@ impl<'de> Visitor<'de> for ColorVisitor {
 
 #[derive(Debug, Deserialize)]
 pub struct KeyMap {
-    /*
     /// Toggle conversion mode on
     pub henkan: Keybinding,
     /// Toggle conversion mode off
     pub muhenkan: Keybinding,
-    */
     /// Accept currently selected conversion
     pub accept: Keybinding,
     /// Delete one character in conversion
@@ -162,6 +157,24 @@ pub struct Keybinding {
 }
 
 impl Keybinding {
+    /// Checks if keybinding matches other keybinding
+    ///
+    /// Allows self to have more mod keys active
+    pub fn matches(&self, other: &Keybinding) -> bool {
+        let self_bits: u32 = self.mod_mask.into();
+        let other_bits: u32 = other.mod_mask.into();
+
+        (self.key == other.key) && (self_bits & other_bits == other_bits)
+    }
+
+    /// Checks if keybinding matches other keybinding exactly, including all modifiers
+    pub fn matches_exactly(&self, other: &Keybinding) -> bool {
+        let self_bits: u32 = self.mod_mask.into();
+        let other_bits: u32 = other.mod_mask.into();
+
+        (self.key == other.key) && (self_bits == other_bits)
+    }
+
     pub fn from_str(key_str: &str) -> Result<Self, KeybindingError> {
         let mut mods = key_str
             .split("-")
@@ -276,6 +289,13 @@ mod tests {
             Keybinding {
                 mod_mask: KeyButMask::CONTROL | KeyButMask::SHIFT,
                 key: pino_xmodmap::KeySym::KEY_a
+            }
+        );
+        assert_eq!(
+            Keybinding::from_str("C-comma").unwrap(),
+            Keybinding {
+                mod_mask: KeyButMask::CONTROL,
+                key: pino_xmodmap::KeySym::KEY_COMMA
             }
         );
         assert_eq!(

@@ -1,4 +1,3 @@
-use crate::config::HENKAN_KEY;
 use pino_xmodmap::{KeySym, KeyTable, Modifier};
 
 use std::{
@@ -11,6 +10,8 @@ use x11rb::{
     rust_connection::RustConnection,
     CURRENT_TIME,
 };
+
+use crate::config::SETTINGS;
 
 #[derive(Debug)]
 pub enum XorgError {
@@ -87,9 +88,6 @@ impl XSession {
     }
 
     pub fn grab_keyboard(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let (_henkan_mod, _henkan_keysym) = self.keytable.get_key(HENKAN_KEY)?;
-        // ungrab_key(&self.conn, henkan_keysym, self.screen().root, ModMask::ANY)?.check()?;
-
         // grab user keypresses
         let grab_status = grab_keyboard(
             &self.conn,
@@ -110,8 +108,8 @@ impl XSession {
         ungrab_keyboard(&self.conn, CURRENT_TIME)?.check()?;
         // the only key we still want to grab is the muhenkan key
 
-        let (henkan_mod, henkan_keysym) = self.keytable.get_key(HENKAN_KEY)?;
-        let henkan_mod = xmodmap_to_x_modifier(henkan_mod);
+        let (_, henkan_keysym) = self.keytable.get_key(SETTINGS.keys.henkan.key.clone())?;
+        let henkan_mod = keybutmask_to_modmask(SETTINGS.keys.henkan.mod_mask);
         grab_key(
             &self.conn,
             true,
@@ -140,4 +138,10 @@ fn xmodmap_to_x_modifier(modifier: Modifier) -> ModMask {
         Modifier::ShiftKey => ModMask::SHIFT,
         _ => ModMask::from(0u8), // TODO maybe should return error?
     }
+}
+
+fn keybutmask_to_modmask(mask: KeyButMask) -> ModMask {
+    // TODO  this is a very duct tape solution
+    let bits: u16 = mask.into();
+    ModMask::from(bits & 0xFF)
 }
