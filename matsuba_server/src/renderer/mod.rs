@@ -16,6 +16,7 @@ use winit::{
     platform::unix::WindowBuilderExtUnix,
     window::{Window, WindowBuilder},
 };
+use x11rb::protocol::xproto::KeyButMask;
 
 use crate::{
     config::{HENKAN_KEY, MUHENKAN_KEY},
@@ -112,7 +113,7 @@ pub async fn run() {
         } => {}
         _ => {
             // now run our own keyboard code
-            let (key, modifier) = ok_or_return!(xsession.handle_keypress());
+            let (modifier, keysym) = ok_or_return!(xsession.handle_keypress());
 
             if !ime_state.henkan {
                 match keysym {
@@ -205,7 +206,7 @@ pub async fn run() {
                     KeySym::KEY_TAB => {
                         // conversion already done, cycle through options
                         if !ime_state.conversions.is_empty() {
-                            if modifier != Modifier::ShiftKey {
+                            if modifier == KeyButMask::SHIFT {
                                 ime_state.selected_conversion = (ime_state.selected_conversion + 1)
                                     % (ime_state.conversions.len());
                             } else {
@@ -240,11 +241,6 @@ pub async fn run() {
                         update_size(&gui_state, &ime_state, &window);
                     }
                     _ => {
-			// // extract key press info
-			// let modifier = x_to_xmodmap_modifier(event.state);
-			// let keysym = self.keytable.get_keysym(modifier.clone(), event.detail)?;
-
-			// return Ok(Some((modifier, keysym)));
                         // otherwise feed input directly to converter
                         if let Some(c) = keysym.as_char() {
                             // TODO fix pino_xmodmap library to not return null characters

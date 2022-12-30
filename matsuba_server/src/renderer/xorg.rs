@@ -55,15 +55,17 @@ impl XSession {
         &self.conn.setup().roots[self.screen_num]
     }
 
-    pub fn handle_keypress(
-        &self,
-    ) -> Result<(u8, KeyButMask), Box<dyn std::error::Error>> {
+    pub fn handle_keypress(&self) -> Result<(KeyButMask, KeySym), Box<dyn std::error::Error>> {
         self.conn.flush()?;
 
         if let Some(event) = self.conn.poll_for_event()? {
             match event {
                 Event::KeyPress(event) => {
-		    return Ok((event.detail, event.state))
+                    // extract key press info
+                    let modifier = x_to_xmodmap_modifier(event.state);
+                    let keysym = self.keytable.get_keysym(modifier.clone(), event.detail)?;
+
+                    return Ok((event.state, keysym));
                 }
                 _ => {}
             }
