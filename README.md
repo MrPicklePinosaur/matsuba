@@ -4,7 +4,7 @@
 
 lightweight japanese IME written in rust
 
-[![book](https://img.shields.io/badge/book-website-orange)](#)
+[![book](https://img.shields.io/badge/book-website-orange)](https://mrpicklepinosaur.github.io/matsuba/)
 [![build](https://github.com/MrPicklePinosaur/matsuba/workflows/Release/badge.svg)](https://github.com/MrPicklePinosaur/matsuba/actions)
 [![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](#)
 
@@ -17,7 +17,9 @@ has three main components:
 2. conversion system (hiragana, katakana, kanji)
 3. graphical frontend for X
 
-Each component should be separable as it's own library.
+Each component should be separable as it's own library. Please see the
+[documentation](https://mrpicklepinosaur.github.io/matsuba/) for
+detailed installation, configuration and usage instructions.
 
 ## INSTALLATION
 
