@@ -1,8 +1,9 @@
 // config file for matsuba
 use config::{Config, ConfigError, File};
 use lazy_static::lazy_static;
-use pino_xmodmap::KeySym;
+use pino_xmodmap::{FromStr, KeySym, KeyTable, Modifier};
 use serde::{de::Visitor, Deserialize};
+use x11rb::protocol::xproto::KeyButMask;
 
 pub const HENKAN_KEY: KeySym = KeySym::KEY_0;
 pub const MUHENKAN_KEY: KeySym = KeySym::KEY_9;
@@ -13,8 +14,8 @@ lazy_static! {
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
-    // pub keys: KeyMap
     pub server: Server,
+    pub keys: KeyMap,
     pub theme: Theme,
     pub database: Database,
 }
@@ -116,23 +117,116 @@ impl<'de> Visitor<'de> for ColorVisitor {
     }
 }
 
-/*
 #[derive(Debug, Deserialize)]
 pub struct KeyMap {
+    /*
     /// Toggle conversion mode on
-    pub henkan: VirtualKeyCode,
+    pub henkan: Keybinding,
     /// Toggle conversion mode off
-    pub muhenkan: VirtualKeyCode,
+    pub muhenkan: Keybinding,
+    */
     /// Accept currently selected conversion
-    pub accept: VirtualKeyCode,
+    pub accept: Keybinding,
+    /// Delete one character in conversion
+    pub delete: Keybinding,
     /// Abort currently selected conversions
-    pub cancel: VirtualKeyCode,
+    pub cancel: Keybinding,
     /// Cycle to the next conversion
-    pub next_conversion: VirtualKeyCode,
+    pub next_conversion: Keybinding,
     /// Cycle to the previous conversion
-    pub prev_conversion: VirtualKeyCode,
+    pub prev_conversion: Keybinding,
 }
-*/
+
+#[derive(Debug)]
+pub enum KeybindingError {
+    TooShort,
+    InvalidModifier(String),
+    InvalidKey(String),
+}
+
+impl std::error::Error for KeybindingError {}
+impl std::fmt::Display for KeybindingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::TooShort => write!(f, "keybinding string too short"),
+            Self::InvalidModifier(m) => write!(f, "invalid modifier recieved {}", m),
+            Self::InvalidKey(k) => write!(f, "invalid key recieved {}", k),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Keybinding {
+    pub mod_mask: KeyButMask,
+    pub key: KeySym,
+}
+
+impl Keybinding {
+    pub fn from_str(key_str: &str) -> Result<Self, KeybindingError> {
+        let mut mods = key_str
+            .split("-")
+            .filter(|&s| !s.is_empty())
+            .collect::<Vec<_>>();
+
+        if mods.is_empty() {
+            return Err(KeybindingError::TooShort);
+        }
+        let raw_key = mods.pop().unwrap();
+        let key = KeySym::from_str(raw_key)
+            .map_err(|_| KeybindingError::InvalidKey(raw_key.to_owned()))?;
+
+        let mut mod_mask = KeyButMask::default();
+
+        for modifier in mods {
+            match modifier {
+                "M" => {
+                    mod_mask = mod_mask | KeyButMask::MOD1;
+                }
+                "S" => {
+                    mod_mask = mod_mask | KeyButMask::SHIFT;
+                }
+                "C" => {
+                    mod_mask = mod_mask | KeyButMask::CONTROL;
+                }
+                _ => {
+                    return Err(KeybindingError::InvalidModifier(modifier.to_owned()));
+                }
+            }
+        }
+
+        Ok(Self { mod_mask, key })
+    }
+}
+
+impl<'de> Deserialize<'de> for Keybinding {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_any(KeybindingVisitor)
+    }
+}
+
+struct KeybindingVisitor;
+impl<'de> Visitor<'de> for KeybindingVisitor {
+    type Value = Keybinding;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("A keybinding string (ex M-a C-S-x)")
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Keybinding::from_str(value).map_err(|e| {
+            serde::de::Error::custom(format!(
+                "error parsing keybinding string: {}",
+                e.to_string()
+            ))
+        })
+    }
+}
 
 impl Settings {
     pub fn load() -> Result<Self, ConfigError> {
@@ -148,6 +242,8 @@ impl Settings {
 #[cfg(test)]
 mod tests {
 
+    use x11rb::protocol::xproto::KeyButMask;
+
     use crate::config::Settings;
 
     #[test]
@@ -162,5 +258,39 @@ mod tests {
         use super::Color;
 
         println!("{:?}", Color::from_hex("#ABCDEF"));
+    }
+
+    #[test]
+    fn keybinding_test() {
+        use super::Keybinding;
+
+        assert_eq!(
+            Keybinding::from_str("M-a").unwrap(),
+            Keybinding {
+                mod_mask: KeyButMask::MOD1,
+                key: pino_xmodmap::KeySym::KEY_a
+            }
+        );
+        assert_eq!(
+            Keybinding::from_str("C-S-a").unwrap(),
+            Keybinding {
+                mod_mask: KeyButMask::CONTROL | KeyButMask::SHIFT,
+                key: pino_xmodmap::KeySym::KEY_a
+            }
+        );
+        assert_eq!(
+            Keybinding::from_str("S-Tab").unwrap(),
+            Keybinding {
+                mod_mask: KeyButMask::SHIFT,
+                key: pino_xmodmap::KeySym::KEY_TAB
+            }
+        );
+        assert_eq!(
+            Keybinding::from_str("BackSpace").unwrap(),
+            Keybinding {
+                mod_mask: KeyButMask::default(),
+                key: pino_xmodmap::KeySym::KEY_BACKSPACE
+            }
+        );
     }
 }

@@ -1,6 +1,15 @@
 [server]
 listen_address = "[::1]:10000"
 
+[keys]
+henkan = "C-,"
+muhenkan = "C-."
+accept = "Return"
+delete = "BackSpace"
+cancel = "Escape"
+next_conversion = "Tab"
+prev_conversion = "S-Tab"
+
 [theme]
 # color of unselected entries
 bg = "#333333"
