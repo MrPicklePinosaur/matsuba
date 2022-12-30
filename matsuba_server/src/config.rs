@@ -14,8 +14,8 @@ lazy_static! {
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
-    // pub keys: KeyMap
     pub server: Server,
+    pub keys: KeyMap,
     pub theme: Theme,
     pub database: Database,
 }
@@ -119,12 +119,16 @@ impl<'de> Visitor<'de> for ColorVisitor {
 
 #[derive(Debug, Deserialize)]
 pub struct KeyMap {
+    /*
     /// Toggle conversion mode on
     pub henkan: Keybinding,
     /// Toggle conversion mode off
     pub muhenkan: Keybinding,
+    */
     /// Accept currently selected conversion
     pub accept: Keybinding,
+    /// Delete one character in conversion
+    pub delete: Keybinding,
     /// Abort currently selected conversions
     pub cancel: Keybinding,
     /// Cycle to the next conversion
@@ -272,6 +276,20 @@ mod tests {
             Keybinding {
                 mod_mask: KeyButMask::CONTROL | KeyButMask::SHIFT,
                 key: pino_xmodmap::KeySym::KEY_a
+            }
+        );
+        assert_eq!(
+            Keybinding::from_str("S-Tab").unwrap(),
+            Keybinding {
+                mod_mask: KeyButMask::SHIFT,
+                key: pino_xmodmap::KeySym::KEY_TAB
+            }
+        );
+        assert_eq!(
+            Keybinding::from_str("BackSpace").unwrap(),
+            Keybinding {
+                mod_mask: KeyButMask::default(),
+                key: pino_xmodmap::KeySym::KEY_BACKSPACE
             }
         );
     }
