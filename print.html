@@ -1,0 +1,268 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>matsuba documentation</title>
+        <meta name="robots" content="noindex" />
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="User and developer documentation for matsuba">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="features.html">Features</a></li><li class="chapter-item expanded "><a href="user/index.html"><strong aria-hidden="true">1.</strong> User Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user/installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="user/usage.html"><strong aria-hidden="true">1.2.</strong> Usage</a></li><li class="chapter-item expanded "><a href="user/configuration.html"><strong aria-hidden="true">1.3.</strong> Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="developer/index.html"><strong aria-hidden="true">2.</strong> Developer Guide</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><a href="contributors.html">Contributors</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">matsuba documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/MrPicklePinosaur/matsuba" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <div align="center">
+<h1 id="松葉-matsuba"><a class="header" href="#松葉-matsuba">松葉 matsuba</a></h1>
+<hr>
+</div>
+<p><strong>matsuba</strong> is a lightweight Japanese IME for Linux. It comes with kana input, kanji conversion and completion as well as a utility cli.</p>
+<p><strong>matsuba</strong> is still very much so a young project so bugs and issues will be present. Please do not hesitate to <a href="https://github.com/MrPicklePinosaur/matsuba/issues">leave an issue</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="features"><a class="header" href="#features">Features</a></h1>
+<p>Some notable features of <strong>matsuba</strong> are</p>
+<ul>
+<li>hiragana/katakana conversion</li>
+<li>kanji dictionary completion</li>
+<li>querying and mutate state using cli</li>
+<li>manually convert kana to kanji using cli</li>
+<li>modular and extensible popup completion menu</li>
+<li>written in rust</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="user-guide"><a class="header" href="#user-guide">User Guide</a></h1>
+<p>This section is for end users of <strong>matsuba</strong>. It will cover installation, configuration and usage.</p>
+<h2 id="what-is-an-ime"><a class="header" href="#what-is-an-ime">What is an IME?</a></h2>
+<p>An input method editor (IME) is a program that let's characters that
+you normally cannot. <strong>matsuba</strong> is an IME for Japanese. <strong>matsuba</strong>
+has two special keybindings call <em>henkan</em> (conversion mode) and
+<em>muhenkan</em> (no conversion mode). In <em>henkan</em> mode, all characters that
+you type will be converted into hiragana, and pressing the complete
+key will bring up a list of kanji that can be converted into. In
+<em>muhenkan</em> mode, your keyboard behaves like it originally does. This
+let's you quickly toggle between the two keyboards.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<h2 id="linux-packages"><a class="header" href="#linux-packages">Linux Packages</a></h2>
+<p><strong>matsuba</strong> is packaged for various linux distributions.</p>
+<h3 id="arch-linux"><a class="header" href="#arch-linux">Arch Linux</a></h3>
+<p>Avaliable on the AUR with either the built version of the last stable release</p>
+<pre><code>yay -S matsuba-bin
+</code></pre>
+<p>or latest commit directly from git</p>
+<pre><code>yay -S matsuba-git
+</code></pre>
+<h2 id="from-source"><a class="header" href="#from-source">From Source</a></h2>
+<p>Clone the repository:</p>
+<pre><code class="language-sh">git clone https://github.com/MrPicklePinosaur/matsuba
+</code></pre>
+<p>Build the source:</p>
+<pre><code class="language-sh">cargo build --release
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="usage"><a class="header" href="#usage">Usage</a></h1>
+<h2 id="starting-matsud"><a class="header" href="#starting-matsud">Starting matsud</a></h2>
+<p><strong>matsud</strong> is the actual server that handles the heaving lifting. You can start it as a daemon by running</p>
+<pre><code class="language-sh">matsud &amp;
+</code></pre>
+<p>Alternatively, you can use your init system to automatically manage <strong>matsud</strong> for you. For systemd users:</p>
+<pre><code class="language-sh">sudo systemctl enable matsuba
+sudo systemctl start matsuba
+</code></pre>
+<h2 id="fetching-dictionary"><a class="header" href="#fetching-dictionary">Fetching Dictionary</a></h2>
+<p><strong>matsuba</strong> first needs to fetch kanji lists from the <a href="https://www.edrdg.org/jmdict/edict.html">EDICT/JMICT project</a> for use in kanji completions. You can populate the <strong>matsuba</strong> database by running</p>
+<pre><code class="language-sh">matsucli fetch
+</code></pre>
+<p>You can also fine tune which kanji lists are populated via tags/filters. By default all tags are enabled. A full list can be found <a href="https://www.edrdg.org/jmdictdb/cgi-bin/edhelp.py?svc=jmdict&amp;sid=#kw_fld">here</a>. Just pass in which tags you wish to include (or not include) using the <code>tag</code> flag:</p>
+<pre><code class="language-sh">matsucli fetch --tag -baseb,-bot,+grmyth
+</code></pre>
+<p>In the above example, baseball words and botany words are not included, but greek myth words are.</p>
+<h2 id="matsucli"><a class="header" href="#matsucli">matsucli</a></h2>
+<p><strong>matsucli</strong> is a utility command line interface to interact with the main <strong>matsuba</strong> daemon, <strong>matsud</strong>. <strong>matsucli</strong> let's you query and modify the state of <strong>matsuba</strong>, such as enabling and disabling henkan mode, as well as converting kana. This is great for interacting with scripts.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration"><a class="header" href="#configuration">Configuration</a></h1>
+<p><strong>mastuba</strong> is configured with <a href="https://toml.io/en/">toml</a>. The default configuration file is installed at <code>/usr/share/matsuba/matsuba_default.toml</code>. You can copy it and create per user changes:</p>
+<pre><code>cp /usr/share/matsuba/matsuba_default.toml ~/.config/matsuba/matsuba.toml
+</code></pre>
+<p>Currently the places <strong>matsuba</strong> looks for configuration files are (in increasing presedence):</p>
+<ul>
+<li><code>/usr/share/matsuba/matsuba_default.toml</code></li>
+<li><code>~/.config/matsuba_.toml</code></li>
+</ul>
+<h2 id="configuration-options"><a class="header" href="#configuration-options">Configuration Options</a></h2>
+<table><thead><tr><th>key</th><th>purpose</th><th>default value</th></tr></thead><tbody>
+<tr><td>server.listen_address</td><td>port the gRPC server listens on</td><td>[::1]:10000</td></tr>
+<tr><td>keys.henkan</td><td>switch to henkan mode</td><td>C-comma</td></tr>
+<tr><td>keys.muhenkan</td><td>switch to muhenkan mode</td><td>C-period</td></tr>
+<tr><td>keys.accept</td><td>accept the currently selected conversion</td><td>Return</td></tr>
+<tr><td>keys.delete</td><td>delete one character in conversion</td><td>BackSpace</td></tr>
+<tr><td>keys.cancel</td><td>cancel the entire conversion</td><td>Escape</td></tr>
+<tr><td>keys.next_conversion</td><td>cycle to the next conversion</td><td>Tab</td></tr>
+<tr><td>keys.prev_conversion</td><td>cycle to the previous conversion</td><td>S-Tab</td></tr>
+<tr><td>theme.bg</td><td>default background color</td><td></td></tr>
+<tr><td>theme.fg</td><td>default foreground color</td><td></td></tr>
+<tr><td>theme.selected_bg</td><td>background color of selected conversion</td><td></td></tr>
+<tr><td>theme.selected_fg</td><td>foreground color of selected conversion</td><td></td></tr>
+<tr><td>theme.completion_bg</td><td>background color of completion</td><td></td></tr>
+<tr><td>theme.completion_fg</td><td>foreground color of completion</td><td></td></tr>
+<tr><td>database.cache_dir</td><td>file directory that database files will be stored in</td><td>$HOME/.config/matsuba</td></tr>
+</tbody></table>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="developer-guide"><a class="header" href="#developer-guide">Developer Guide</a></h1>
+<p><strong>matsuba</strong> encourages the creation of 3rd party completion renderers (the little box that pops up when you start typing).</p>
+<p>An in-depth developer guide is coming soon...</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contributors"><a class="header" href="#contributors">Contributors</a></h1>
+<p><strong>matsuba</strong> was developed by <a href="https://github.com/MrPicklePinosaur">MrPicklePinosaur</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+    </body>
+</html>
