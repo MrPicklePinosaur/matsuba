@@ -9,6 +9,7 @@ mod xmlparse;
 use log::info;
 use tonic::transport::Server;
 
+use crate::config::SETTINGS;
 use crate::service::{MatsubaServer, MatsubaService};
 
 #[tokio::main]
@@ -17,7 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tokio::spawn(async move {
         // manually trigger lazy static call (sorta hacky)
-        let listen_address = &config::SETTINGS.server.listen_address;
+        let listen_address = &SETTINGS.server.listen_address;
 
         info!("starting tonic server at {}", listen_address);
 

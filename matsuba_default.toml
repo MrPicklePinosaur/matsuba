@@ -24,4 +24,4 @@ completion_bg = "#AAAAAA"
 completion_fg = "#333333"
 
 [database]
-cache_dir = "/home/pinosaur/.config/matsuba"
+cache_dir = "/usr/share/matsuba"

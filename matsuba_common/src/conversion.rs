@@ -6,7 +6,6 @@ pub static REPEATABLE_CHARACTERS: &[char] = &[
 ];
 
 pub static CONVERSION_TABLE: &[(&str, &str, &str)] = &[
-
     // monographs
     ("a", "あ", "ア"),
     ("i", "い", "イ"),
@@ -81,7 +80,6 @@ pub static CONVERSION_TABLE: &[(&str, &str, &str)] = &[
     ("pu", "ぷ", "プ"),
     ("pe", "ぺ", "ペ"),
     ("po", "ぽ", "ポ"),
-
     // digraphs
     ("kya", "きゃ", "キャ"),
     ("kyu", "きゅ", "キュ"),
@@ -116,7 +114,6 @@ pub static CONVERSION_TABLE: &[(&str, &str, &str)] = &[
     ("pya", "ぴゃ", "ピャ"),
     ("pyu", "ぴゅ", "ピュ"),
     ("pyo", "ぴょ", "ピョ"),
-
     // small characters
     ("xa", "ぁ", "ァ"),
     ("xi", "ぃ", "ィ"),
@@ -130,6 +127,5 @@ pub static CONVERSION_TABLE: &[(&str, &str, &str)] = &[
     ("xwa", "ゎ", "ヮ"),
     ("xka", "ヵ", "ヵ"),
     ("xke", "ヶ", "ヶ"),
-
     // (hentaigana for fun?) + extended katakana etc チェ + halfwidth?
 ];

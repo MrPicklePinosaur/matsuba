@@ -4,9 +4,8 @@ Description=matsuba - the lightweight japanese ime
 
 [Service]
 Type=simple
-User=root
 WorkingDirectory=
-ExecStart=matsuba run
+ExecStart=matsud
 Restart=always
 
 [Install]

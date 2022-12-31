@@ -243,12 +243,22 @@ impl<'de> Visitor<'de> for KeybindingVisitor {
 
 impl Settings {
     pub fn load() -> Result<Self, ConfigError> {
-        let conf = Config::builder()
-            .add_source(File::with_name("matsuba_default.toml"))
-            // .add_source(File::with_name("matsuba.toml"))
-            .build()?;
+        use std::path::Path;
 
-        conf.try_deserialize()
+        let mut conf = Config::builder()
+            .add_source(File::with_name("/usr/share/matsuba/matsuba_default.toml"));
+
+        if let Some(home) = dirs::home_dir() {
+            let mut path = home.clone();
+            path.push(Path::new(".config/matsuba/matsuba.toml"));
+            if let Some(path) = path.to_str() {
+                conf = conf.add_source(File::with_name(path).required(false));
+            }
+        }
+
+        let conf_built = conf.build()?;
+
+        conf_built.try_deserialize()
     }
 }
 
