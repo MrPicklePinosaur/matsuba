@@ -1,0 +1,11 @@
+[book]
+title = "まつばガイド"
+authors = ["MrPicklePinosaur"]
+description = "ユーザとデベロッパー向けのガイド"
+language = "ja"
+multilingual = false
+src = "src"
+
+[output.html]
+default-theme = "light"
+git-repository-url = "https://github.com/MrPicklePinosaur/matsuba"

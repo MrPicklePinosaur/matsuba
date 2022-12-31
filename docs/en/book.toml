@@ -3,7 +3,7 @@ title = "matsuba documentation"
 authors = ["MrPicklePinosaur"]
 description = "User and developer documentation for matsuba"
 language = "en"
-multilingual = true
+multilingual = false
 src = "src"
 
 [output.html]
