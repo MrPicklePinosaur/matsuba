@@ -4,9 +4,9 @@ Description=matsuba - the lightweight japanese ime
 
 [Service]
 Type=simple
-WorkingDirectory=
-ExecStart=matsud
 Restart=always
+Environment="RUST_LOG=info"
+ExecStart= matsud
 
 [Install]
 WantedBy=multi-user.target
