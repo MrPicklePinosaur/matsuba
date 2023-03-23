@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 BOLD='\033[1;36m'
 NC='\033[0m'

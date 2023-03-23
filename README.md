@@ -43,25 +43,6 @@ your dictionary, along with some options on what word lists to fetch (bio,
 sports, names etc), you can see a full list of 'filters'
 [here](https://www.edrdg.org/jmdictdb/cgi-bin/edhelp.py?svc=jmdict&sid=#kw_fld).
 
-## RUNNING FOR DEVELOPMENT
-To run the daemon
-```
-just matsud
-```
-
-To run the cli
-```
-just matsucli
-```
-
-## PROJECT STRUCTURE
-
-The project is broken up into the following crates
-- **matsuba_cli**: end user cli for managing the matsuba daemon as well as for running conversions from the shell
-- **matsuba_server**: edict database wrapper, kana state machine and conversion graphical wgpu-based frontend for displaying completions
-- **matsuba_common**: common types and code
-- **matsuba_grpc**: tonic generated sdk for grpc
-
 ## TODO
 
 Roadmap to 1.0 release
@@ -85,5 +66,7 @@ Roadmap to 1.0 release
 
 ## CONTRIBUTING
 
-Feel free to open any issues and pull requests to support development :)
+Feel free to open any issues and pull requests to support development! Please
+see the [Developer Guide](https://mrpicklepinosaur.github.io/matsuba/developer/index.html) (WIP)
+for contribution guidelines and an overview of the internals.
 
